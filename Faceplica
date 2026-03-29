@@ -1,7 +1,7 @@
 # Compilatio instrumentorum ddiff et dpatch
 
-CC      = cc
-CFLAGS  = -O2 -Wall -Wextra -Wpedantic
+CC      ?= cc
+CFLAGS  ?= -Wall -Wextra -pedantic -std=c99 -O2
 OMNIA   = ddiff dpatch
 
 omnia: $(OMNIA)
