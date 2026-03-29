@@ -236,12 +236,12 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
 
 /* Resolutio capitis segmenti: -a,b +c,d */
 fn resolve_caput_segmenti(versus: &str) -> (i32, i32, i32, i32) {
-    let mut s_vet: i32 = 0;
+    let s_vet: i32;
     let mut n_vet: i32 = 1;
-    let mut s_nov: i32 = 0;
+    let s_nov: i32;
     let mut n_nov: i32 = 1;
 
-    let mut iter = versus.as_bytes().iter().enumerate();
+    let iter = versus.as_bytes().iter().enumerate();
     let mut pos = 0;
 
     /* Transili signum '-' */

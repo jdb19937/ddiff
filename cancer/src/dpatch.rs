@@ -38,6 +38,7 @@ struct Translatio {
     initium_dest: i32,                   /* numerus versus initialis in dest    */
     finis_dest: i32,                     /* numerus versus finalis in dest      */
     magnitudo: i32,                      /* versus totales (Nv)                 */
+    #[allow(dead_code)]
     dissimilia: i32,                     /* versus dissimiles (Md)              */
     substitutiones: Vec<Option<String>>, /* [0..magnitudo-1], None = identicum */
 }
@@ -50,6 +51,7 @@ struct VersusOperatio {
 
 struct MutatioFasciculi {
     iter: String, /* iter fasciculi                      */
+    #[allow(dead_code)]
     genus: i32,   /* genus fasciculi                     */
     operationes: Vec<VersusOperatio>,
 }
