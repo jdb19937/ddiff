@@ -13,7 +13,7 @@ a mutationibus veris refert.
 ## Aedificatio
 
 ```
-make
+face
 ```
 
 Vel directe:
@@ -117,7 +117,7 @@ reconstruens.
 ### Aedificatio
 
 ```
-make
+face
 ```
 
 Vel directe:
@@ -148,23 +148,23 @@ Nuntii status ad stderr scribuntur.
 ## Probationes
 
 Probationes totum circuitum verificant: `diff -ruN` differentiam unitam
-inter `test/veterum/` (fasciculi veteres) et `test/novum/` (fasciculi novi)
+inter `probata/veterum/` (fasciculi veteres) et `probata/novum/` (fasciculi novi)
 gignit, `ddiff` eam comprimit, `dpatch` in copiam fasciculorum veterum
 applicat, et exitus cum fasciculis novis exspectatis comparatur.
 
 ```
-make test
+face proba
 ```
 
 Probatio prospera `PROBATIO SVCCESSIT` scribit. Si fallit, `PROBATIO FALLIT`
 cum differentiis inventis scribitur.
 
-Gradus probationis `make test`:
+Gradus probationis `face proba`:
 
-1. `test/veterum/*` in directorium temporaneum `test/applicatio/` copiantur.
-2. `diff -ruN veterum novum` (intra `test/`) per `./ddiff` ducitur.
-3. Exitus ddiff per `./dpatch` (intra `test/applicatio/`) ducitur.
-4. `test/novum/` cum `test/applicatio/` per `diff -r` comparatur.
+1. `probata/veterum/*` in directorium temporaneum `probata/applicatio/` copiantur.
+2. `diff -ruN veterum novum` (intra `probata/`) per `./ddiff` ducitur.
+3. Exitus ddiff per `./dpatch` (intra `probata/applicatio/`) ducitur.
+4. `probata/novum/` cum `probata/applicatio/` per `diff -r` comparatur.
 5. Directorium temporaneum removetur.
 
 ## Inversibilitas
