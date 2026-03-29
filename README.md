@@ -162,6 +162,30 @@ The format is fully invertible. Given the original files and a ddiff:
 
 Other tools give you a diff you can barely read. **ddiff** gives you a diff you can *reverse*. You're still welcome.
 
+## cancer — The Rust Port (A Monument to Equivalence)
+
+Inside the `cancer/` directory lives a **complete, faithful, byte-for-byte identical Rust translation** of both `ddiff` and `dpatch`. Every function name, every variable, every comment — exactly as the C originals.
+
+The Rust port produces **exactly the same output** as the C version. Not "similar." Not "compatible." **Identical.** Given the same input, both produce the same stdout to the last byte. This is not an aspiration or a best-effort promise — it is an invariant. It has been true since the first compilation and it will remain true for as long as this repository exists, which is to say, forever.
+
+The two implementations are locked in permanent parity. They are the same program written twice: once in the language of Ritchie, once in the language of the crab. They breathe in unison. They will never diverge.
+
+### Build
+
+```
+cd cancer && cargo build --release
+```
+
+The binaries appear at `cancer/target/release/ddiff` and `cancer/target/release/dpatch`. Zero external dependencies. Just `std`. Because **ddiff** doesn't need your crate ecosystem.
+
+### Why "cancer"?
+
+Rust's mascot is Ferris the crab. If you needed that explained, the C version is probably more your speed.
+
+### Is the Rust version maintained?
+
+Yes. Both implementations are maintained in lockstep. If the C version changes, the Rust version follows. Parity is not a courtesy — it is a guarantee. The test suite enforces byte-identical output across both implementations, and it will stay that way.
+
 ## Limitations
 
 - Matching is exact-hash per line. But honestly, if your moved blocks have edits on *most* lines, that's a you problem.

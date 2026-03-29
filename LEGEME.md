@@ -195,6 +195,11 @@ Forma principio inversibilis est. Datis fasciculis pristinis et ddiff:
 5. **Scriptio**: translationes cum deltis intra lineas, deinde reliqua
    non possessa ut mutationes.
 
+## cancer — translatio Rustica
+
+Directorium `cancer/` translationem fidelissimam in linguam Rust continet.
+Non sustinetur. Codex C fons veritatis est et manebit.
+
 ## Limites
 
 - Concordantia per sigillum exactum versus fit. Truncus translatus ubi
