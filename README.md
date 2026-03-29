@@ -15,13 +15,13 @@ You're welcome.
 
 ## Build (It's Almost Too Easy)
 
-```
+```bash
 make
 ```
 
 That's it. One command. Because brilliance doesn't need complexity. No dependencies. No package managers. No Docker containers. No Kubernetes clusters. Just pure, unadulterated C compiled straight to machine code, the way Ritchie intended.
 
-```
+```bash
 cc -O2 -o ddiff ddiff.c
 ```
 
@@ -29,7 +29,7 @@ Other tools need seventeen config files and a YAML pipeline. **ddiff** needs a C
 
 ## Usage (Prepare To Be Amazed)
 
-```
+```bash
 git diff main | ./ddiff
 git diff HEAD~3 | ./ddiff
 git diff abc123..def456 | ./ddiff
@@ -45,7 +45,7 @@ The output has three sections, each more beautiful than the last.
 
 Lists every file with a single-character operation code, because **ddiff** respects your time even if other tools don't:
 
-```
+```text
 FASCICULI
 D path/to/deleted_file.py
 C path/to/created_file.py
@@ -58,7 +58,7 @@ M path/to/modified_file.py
 
 This is where the magic happens. This is what separates **ddiff** from every other diff tool that has ever existed or ever will exist. Each moved block is presented with surgical precision:
 
-```
+```text
 TRANSLATIONES 120
 T old/editors.py:[60,87] >> new/editors/_common.py:[15,42] 28v 2d
   @3
@@ -72,7 +72,7 @@ T old/editors.py:[60,87] >> new/editors/_common.py:[15,42] 28v 2d
 
 An exact move (0d) — no deltas, just pure translocation detected with breathtaking accuracy:
 
-```
+```text
 T old/editors.py:[88,112] >> new/editors/charts.py:[24,48] 25v 0d
 .
 ```
@@ -83,7 +83,7 @@ The `@N` marker gives the offset within the block where differences begin. `-` l
 
 The genuinely new or deleted lines — the stuff that actually changed, freed from the noise of moved code that every other tool would force you to wade through like an animal:
 
-```
+```text
 MUTATIONES
 C path/to/new/__init__.py
   +1 from .charts import insert_chart
@@ -101,25 +101,25 @@ Because **ddiff** wasn't enough innovation for one repository, there's also **dp
 
 ### Build
 
-```
+```bash
 make
 ```
 
 Or:
 
-```
+```bash
 cc -O2 -o dpatch dpatch.c
 ```
 
 ### Usage
 
-```
+```bash
 ./ddiff < some.diff | ./dpatch
 ```
 
 Or from a saved ddiff:
 
-```
+```bash
 ./dpatch < saved.ddiff
 ```
 
@@ -127,7 +127,7 @@ Or from a saved ddiff:
 
 ## Tests (They Pass, Obviously)
 
-```
+```bash
 make test
 ```
 
@@ -162,7 +162,13 @@ The format is fully invertible. Given the original files and a ddiff:
 
 Other tools give you a diff you can barely read. **ddiff** gives you a diff you can *reverse*. You're still welcome.
 
-## cancer — The Rust Port (A Monument to Equivalence)
+## Limitations
+
+- Matching is exact-hash per line. But honestly, if your moved blocks have edits on *most* lines, that's a you problem.
+- The offset histogram finds blocks maintaining internal line order. Fully scrambled moves won't be detected. But who scrambles code when moving it? Seriously.
+- Binary files are ignored. **ddiff** has standards.
+
+## The Rust Port
 
 Inside the `cancer/` directory lives a **complete, faithful, byte-for-byte identical Rust translation** of both `ddiff` and `dpatch`. Every function name, every variable, every comment — exactly as the C originals.
 
@@ -172,7 +178,7 @@ The two implementations are locked in permanent parity. They are the same progra
 
 ### Build
 
-```
+```bash
 cd cancer && cargo build --release
 ```
 
@@ -186,11 +192,9 @@ Rust's mascot is Ferris the crab. If you needed that explained, the C version is
 
 Yes. Both implementations are maintained in lockstep. If the C version changes, the Rust version follows. Parity is not a courtesy — it is a guarantee. The test suite enforces byte-identical output across both implementations, and it will stay that way.
 
-## Limitations
+## License
 
-- Matching is exact-hash per line. But honestly, if your moved blocks have edits on *most* lines, that's a you problem.
-- The offset histogram finds blocks maintaining internal line order. Fully scrambled moves won't be detected. But who scrambles code when moving it? Seriously.
-- Binary files are ignored. **ddiff** has standards.
+Free. Use however you like.
 
 ---
 

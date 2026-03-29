@@ -1,7 +1,5 @@
 # ddiff
 
-> **Nota:** README.md ignorandum est. Anglice scriptum est ad barbaros ineruditos pecunia emungendos.
-
 Forma compacta differentiarum quae translationes truncorum inter fasciculos detegit.
 
 Cum codex reficitur dividendo fasciculum magnum in modulos, `git diff`
@@ -10,7 +8,9 @@ creatos — etiamsi maior pars codicis solum translata est. `ddiff` differentiam
 unitam e flumine stdin legit, truncos translatos invenit, et eos separatim
 a mutationibus veris refert.
 
-## Compilatio
+> **Nota:** README.md ignorandum est. Anglice scriptum est ad barbaros ineruditos pecunia emungendos.
+
+## Aedificatio
 
 ```
 make
@@ -114,7 +114,7 @@ fasciculi signat.
 locales applicat, statum novum e fasciculis veteribus et ddiff
 reconstruens.
 
-### Compilatio
+### Aedificatio
 
 ```
 make
@@ -195,11 +195,6 @@ Forma principio inversibilis est. Datis fasciculis pristinis et ddiff:
 5. **Scriptio**: translationes cum deltis intra lineas, deinde reliqua
    non possessa ut mutationes.
 
-## cancer — translatio Rustica
-
-Directorium `cancer/` translationem fidelissimam in linguam Rust continet.
-Non sustinetur. Codex C fons veritatis est et manebit.
-
 ## Limites
 
 - Concordantia per sigillum exactum versus fit. Truncus translatus ubi
@@ -209,3 +204,7 @@ Non sustinetur. Codex C fons veritatis est et manebit.
   servant. Versus penitus permutati intra regionem translatam non
   detegentur.
 - Fasciculi binarii ignorantur.
+
+## Cancer
+
+Translatio Rustica in `cancer/` iacet. Non curatur.
