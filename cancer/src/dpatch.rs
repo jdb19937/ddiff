@@ -38,8 +38,6 @@ struct Translatio {
     initium_dest: i32,                   /* numerus versus initialis in dest    */
     finis_dest: i32,                     /* numerus versus finalis in dest      */
     magnitudo: i32,                      /* versus totales (Nv)                 */
-    #[allow(dead_code)]
-    dissimilia: i32,                     /* versus dissimiles (Md)              */
     substitutiones: Vec<Option<String>>, /* [0..magnitudo-1], None = identicum */
 }
 
@@ -51,8 +49,6 @@ struct VersusOperatio {
 
 struct MutatioFasciculi {
     iter: String, /* iter fasciculi                      */
-    #[allow(dead_code)]
-    genus: i32,   /* genus fasciculi                     */
     operationes: Vec<VersusOperatio>,
 }
 
@@ -245,15 +241,7 @@ fn resolve_ddiff() -> StaturDdiff {
         while pos_d < octeti_d.len() && octeti_d[pos_d] == b' ' {
             pos_d += 1;
         }
-        let (magnitudo, p6) = lege_numerum(octeti_d, pos_d);
-        pos_d = p6;
-        if pos_d < octeti_d.len() && octeti_d[pos_d] == b'v' {
-            pos_d += 1;
-        }
-        while pos_d < octeti_d.len() && octeti_d[pos_d] == b' ' {
-            pos_d += 1;
-        }
-        let (dissimilia, _) = lege_numerum(octeti_d, pos_d);
+        let (magnitudo, _) = lege_numerum(octeti_d, pos_d);
 
         /* Crea seriem substitutionum */
         let mut substitutiones: Vec<Option<String>> = vec![None; magnitudo as usize];
@@ -289,7 +277,6 @@ fn resolve_ddiff() -> StaturDdiff {
             initium_dest,
             finis_dest,
             magnitudo,
-            dissimilia,
             substitutiones,
         });
         continue;
@@ -322,7 +309,6 @@ fn resolve_ddiff() -> StaturDdiff {
         }
 
         let mut mf = MutatioFasciculi {
-            genus: genus_ex_littera(octeti[0] as char),
             iter: lin[2..].to_string(),
             operationes: Vec::new(),
         };

@@ -241,7 +241,6 @@ fn resolve_caput_segmenti(versus: &str) -> (i32, i32, i32, i32) {
     let s_nov: i32;
     let mut n_nov: i32 = 1;
 
-    let iter = versus.as_bytes().iter().enumerate();
     let mut pos = 0;
 
     /* Transili signum '-' */
@@ -279,7 +278,6 @@ fn resolve_caput_segmenti(versus: &str) -> (i32, i32, i32, i32) {
         n_nov = n2;
     }
 
-    let _ = iter;
     (s_vet, n_vet, s_nov, n_nov)
 }
 
