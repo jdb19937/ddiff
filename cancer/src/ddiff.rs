@@ -17,9 +17,9 @@ use std::io::{self, Read, Write};
 
 /* ---------- Constantiae universales ---------- */
 
-const LIMEN_TRUNCI: i32 = 5;       /* versus minimi pro translatione  */
-const LIMEN_LACUNAE: i32 = 3;      /* hiatus maximus intra truncum    */
-const LIMEN_FREQUENTIAE: i32 = 30;  /* versus nimis communes ignorantur */
+const LIMEN_TRUNCI: i32 = 5; /* versus minimi pro translatione  */
+const LIMEN_LACUNAE: i32 = 3; /* hiatus maximus intra truncum    */
+const LIMEN_FREQUENTIAE: i32 = 30; /* versus nimis communes ignorantur */
 
 /* ---------- Genera fasciculorum ---------- */
 
@@ -30,10 +30,10 @@ const CREATUM: i32 = 2;
 /* ---------- Typi principales ---------- */
 
 struct Versus {
-    argumentum: String,     /* textus versus (sine praefixo +/-)      */
-    sigillum: u64,          /* FNV-1a sigillum argumenti               */
-    numerus: i32,           /* numerus versus in fasciculo (1-index)   */
-    translatum: bool,       /* verum si a translatione iam possessus   */
+    argumentum: String, /* textus versus (sine praefixo +/-)      */
+    sigillum: u64,      /* FNV-1a sigillum argumenti               */
+    numerus: i32,       /* numerus versus in fasciculo (1-index)   */
+    translatum: bool,   /* verum si a translatione iam possessus   */
 }
 
 struct SeriesVersuum {
@@ -50,14 +50,14 @@ struct Fasciculus {
 
 #[derive(Clone)]
 struct Translatio {
-    index_fontis: usize,            /* index fasciculi fontis           */
-    index_destinationis: usize,     /* index fasciculi destinationis    */
-    initium_fontis: usize,          /* primus index in sublata[] fontis */
-    initium_dest: usize,            /* primus index in addita[] dest    */
-    magnitudo: usize,               /* versus totales in trunco         */
-    concordantes: usize,            /* versus exacte concordantes       */
-    numerus_fontis: i32,            /* numerus versus in fasciculo vet. */
-    numerus_dest: i32,              /* numerus versus in fasciculo novo */
+    index_fontis: usize,        /* index fasciculi fontis           */
+    index_destinationis: usize, /* index fasciculi destinationis    */
+    initium_fontis: usize,      /* primus index in sublata[] fontis */
+    initium_dest: usize,        /* primus index in addita[] dest    */
+    magnitudo: usize,           /* versus totales in trunco         */
+    concordantes: usize,        /* versus exacte concordantes       */
+    numerus_fontis: i32,        /* numerus versus in fasciculo vet. */
+    numerus_dest: i32,          /* numerus versus in fasciculo novo */
 }
 
 struct ParSigilli {
@@ -125,7 +125,9 @@ fn extrahe_iter(p: &str) -> String {
 fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
     /* I. Lege totum flumen stdin in thesaurum */
     let mut thesaurus = String::new();
-    io::stdin().read_to_string(&mut thesaurus).expect("ERROR: stdin legi non potest");
+    io::stdin()
+        .read_to_string(&mut thesaurus)
+        .expect("ERROR: stdin legi non potest");
 
     /* II. Divide in versus */
     let versus: Vec<&str> = thesaurus.lines().collect();
@@ -197,13 +199,14 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
         }
 
         /* Lineae quas ignoramus */
-        if lin.starts_with("index ") ||
-           lin.starts_with("similarity") ||
-           lin.starts_with("rename ") ||
-           lin.starts_with("old mode") ||
-           lin.starts_with("new mode") ||
-           lin.starts_with("Binary") ||
-           lin.starts_with('\\') {
+        if lin.starts_with("index ")
+            || lin.starts_with("similarity")
+            || lin.starts_with("rename ")
+            || lin.starts_with("old mode")
+            || lin.starts_with("new mode")
+            || lin.starts_with("Binary")
+            || lin.starts_with('\\')
+        {
             continue;
         }
 
@@ -372,9 +375,7 @@ fn inveni_inter(
         let mut conc: Vec<usize> = Vec::new();
         for k in (k_min as usize)..(k_max as usize) {
             let j = (k as i64 + dist) as usize;
-            if fasciculi[f_s].sublata.res[k].sigillum
-                == fasciculi[f_d].addita.res[j].sigillum
-            {
+            if fasciculi[f_s].sublata.res[k].sigillum == fasciculi[f_d].addita.res[j].sigillum {
                 conc.push(k);
             }
         }
@@ -391,14 +392,10 @@ fn inveni_inter(
             }
 
             /* Reseca concordantias solitarias ab extremitatibus */
-            while cursor > initium_c + 1
-                && (conc[cursor - 1] - conc[cursor - 2] - 1) > 0
-            {
+            while cursor > initium_c + 1 && (conc[cursor - 1] - conc[cursor - 2] - 1) > 0 {
                 cursor -= 1;
             }
-            while initium_c + 1 < cursor
-                && (conc[initium_c + 1] - conc[initium_c] - 1) > 0
-            {
+            while initium_c + 1 < cursor && (conc[initium_c + 1] - conc[initium_c] - 1) > 0 {
                 initium_c += 1;
             }
 
@@ -497,10 +494,7 @@ fn elige_translationes(
 }
 
 /* Invenit omnes translationes inter omnia paria fasciculorum */
-fn inveni_omnes(
-    fasciculi: &mut Vec<Fasciculus>,
-    translationes: &mut Vec<Translatio>,
-) {
+fn inveni_omnes(fasciculi: &mut Vec<Fasciculus>, translationes: &mut Vec<Translatio>) {
     let mut candidati: Vec<Translatio> = Vec::new();
     let num_fasc = fasciculi.len();
     for s in 0..num_fasc {
@@ -535,10 +529,7 @@ fn littera_generis(genus: i32) -> char {
     }
 }
 
-fn scribe_ddiff(
-    fasciculi: &Vec<Fasciculus>,
-    translationes: &mut Vec<Translatio>,
-) {
+fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>) {
     let stdout = io::stdout();
     let mut scriptor = stdout.lock();
 
@@ -549,7 +540,13 @@ fn scribe_ddiff(
     /* ---- FASCICULI ---- */
     writeln!(scriptor, "FASCICULI").unwrap();
     for f in fasciculi.iter() {
-        writeln!(scriptor, "{} {}", littera_generis(f.genus), iter_fasciculi(f)).unwrap();
+        writeln!(
+            scriptor,
+            "{} {}",
+            littera_generis(f.genus),
+            iter_fasciculi(f)
+        )
+        .unwrap();
     }
     writeln!(scriptor).unwrap();
 

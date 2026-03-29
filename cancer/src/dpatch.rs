@@ -26,37 +26,37 @@ const CREATUM: i32 = 2;
 /* ---------- Typi principales ---------- */
 
 struct Fasciculus {
-    iter: String,               /* iter fasciculi                      */
-    genus: i32,                 /* DELETUM / CREATUM / MUTATUM         */
+    iter: String, /* iter fasciculi                      */
+    genus: i32,   /* DELETUM / CREATUM / MUTATUM         */
 }
 
 struct Translatio {
-    iter_fontis: String,        /* iter fasciculi fontis               */
-    initium_fontis: i32,        /* numerus versus initialis in fonte   */
-    finis_fontis: i32,          /* numerus versus finalis in fonte     */
-    iter_dest: String,          /* iter fasciculi destinationis        */
-    initium_dest: i32,          /* numerus versus initialis in dest    */
-    finis_dest: i32,            /* numerus versus finalis in dest      */
-    magnitudo: i32,             /* versus totales (Nv)                 */
-    dissimilia: i32,            /* versus dissimiles (Md)              */
+    iter_fontis: String,                 /* iter fasciculi fontis               */
+    initium_fontis: i32,                 /* numerus versus initialis in fonte   */
+    finis_fontis: i32,                   /* numerus versus finalis in fonte     */
+    iter_dest: String,                   /* iter fasciculi destinationis        */
+    initium_dest: i32,                   /* numerus versus initialis in dest    */
+    finis_dest: i32,                     /* numerus versus finalis in dest      */
+    magnitudo: i32,                      /* versus totales (Nv)                 */
+    dissimilia: i32,                     /* versus dissimiles (Md)              */
     substitutiones: Vec<Option<String>>, /* [0..magnitudo-1], None = identicum */
 }
 
 struct VersusOperatio {
-    numerus: i32,               /* numerus versus in fasciculo         */
-    additum: bool,              /* verum = additum (+), falsum = sublatum (-) */
-    argumentum: String,         /* textus versus                       */
+    numerus: i32,       /* numerus versus in fasciculo         */
+    additum: bool,      /* verum = additum (+), falsum = sublatum (-) */
+    argumentum: String, /* textus versus                       */
 }
 
 struct MutatioFasciculi {
-    iter: String,               /* iter fasciculi                      */
-    genus: i32,                 /* genus fasciculi                     */
+    iter: String, /* iter fasciculi                      */
+    genus: i32,   /* genus fasciculi                     */
     operationes: Vec<VersusOperatio>,
 }
 
 struct VersusAdditus {
-    numerus: i32,               /* numerus versus destinationis         */
-    argumentum: String,         /* textus versus                        */
+    numerus: i32,       /* numerus versus destinationis         */
+    argumentum: String, /* textus versus                        */
 }
 
 /* =========================================================================
@@ -64,11 +64,10 @@ struct VersusAdditus {
  * ========================================================================= */
 
 fn lege_fasciculum(iter: &str) -> Vec<String> {
-    let argumentum = fs::read_to_string(iter)
-        .unwrap_or_else(|err| {
-            eprintln!("ERROR: fasciculus '{}' aperiri non potest: {}", iter, err);
-            std::process::exit(1);
-        });
+    let argumentum = fs::read_to_string(iter).unwrap_or_else(|err| {
+        eprintln!("ERROR: fasciculus '{}' aperiri non potest: {}", iter, err);
+        std::process::exit(1);
+    });
     /* versus[0] vacuus est (index 1-based) */
     let mut versus: Vec<String> = vec![String::new()];
     for linea in argumentum.lines() {
@@ -77,10 +76,7 @@ fn lege_fasciculum(iter: &str) -> Vec<String> {
     versus
 }
 
-fn cape_fasciculum<'a>(
-    cache: &'a mut HashMap<String, Vec<String>>,
-    iter: &str,
-) -> &'a Vec<String> {
+fn cape_fasciculum<'a>(cache: &'a mut HashMap<String, Vec<String>>, iter: &str) -> &'a Vec<String> {
     if !cache.contains_key(iter) {
         let versus = lege_fasciculum(iter);
         cache.insert(iter.to_string(), versus);
@@ -272,11 +268,8 @@ fn resolve_ddiff() -> StaturDdiff {
             } else if lin_d.starts_with("  -") {
                 /* Versus fontis — non opus est, e fasciculo legemus */
             } else if lin_d.starts_with("  +") {
-                if dist_cur >= 0
-                    && (dist_cur + plus_idx) < magnitudo
-                {
-                    substitutiones[(dist_cur + plus_idx) as usize] =
-                        Some(lin_d[3..].to_string());
+                if dist_cur >= 0 && (dist_cur + plus_idx) < magnitudo {
+                    substitutiones[(dist_cur + plus_idx) as usize] = Some(lin_d[3..].to_string());
                 }
                 plus_idx += 1;
             }
@@ -321,10 +314,7 @@ fn resolve_ddiff() -> StaturDdiff {
         }
 
         let octeti = lin.as_bytes();
-        if octeti.len() < 3
-            || !matches!(octeti[0], b'D' | b'C' | b'M')
-            || octeti[1] != b' '
-        {
+        if octeti.len() < 3 || !matches!(octeti[0], b'D' | b'C' | b'M') || octeti[1] != b' ' {
             i += 1;
             continue;
         }
@@ -375,11 +365,7 @@ fn resolve_ddiff() -> StaturDdiff {
  * ========================================================================= */
 
 /* Resolve argumentum destinationis pro indice k intra translationem */
-fn resolve_versum(
-    t: &Translatio,
-    k: i32,
-    fons: &Vec<String>,
-) -> String {
+fn resolve_versum(t: &Translatio, k: i32, fons: &Vec<String>) -> String {
     if let Some(ref sub) = t.substitutiones[k as usize] {
         return sub.clone();
     }
@@ -538,9 +524,7 @@ fn aedifica_mutatum(
     let mut idx_add: usize = 0;
 
     while cursor_nov <= num_nov {
-        if idx_add < addita.len()
-            && addita[idx_add].numerus == cursor_nov as i32
-        {
+        if idx_add < addita.len() && addita[idx_add].numerus == cursor_nov as i32 {
             novi.push(addita[idx_add].argumentum.clone());
             idx_add += 1;
         } else {
