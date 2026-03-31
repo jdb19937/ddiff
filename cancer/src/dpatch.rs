@@ -2,7 +2,7 @@
  *  DPATCH — INSTRUMENTUM APPLICATIONIS DIFFERENTIARUM COMPACTARUM
  *
  *  Hoc instrumentum formam compactam "ddiff" legit e flumine stdin
- *  et mutationes in fasciculos locales applicat.
+ *  et mutationes in plicas locales applicat.
  *
  *  Translatio fidelis ex lingua C in linguam Rust.
  *
@@ -17,7 +17,7 @@ use std::fs;
 use std::io::{self, Read, Write};
 use std::path::Path;
 
-/* ---------- Genera fasciculorum ---------- */
+/* ---------- Genera plicarum ---------- */
 
 const MUTATUM: i32 = 0;
 const DELETUM: i32 = 1;
@@ -25,16 +25,16 @@ const CREATUM: i32 = 2;
 
 /* ---------- Typi principales ---------- */
 
-struct Fasciculus {
-    iter: String, /* iter fasciculi                      */
+struct Plica {
+    iter: String, /* iter plicae                      */
     genus: i32,   /* DELETUM / CREATUM / MUTATUM         */
 }
 
 struct Translatio {
-    iter_fontis: String,                 /* iter fasciculi fontis               */
+    iter_fontis: String,                 /* iter plicae fontis               */
     initium_fontis: i32,                 /* numerus versus initialis in fonte   */
     finis_fontis: i32,                   /* numerus versus finalis in fonte     */
-    iter_dest: String,                   /* iter fasciculi destinationis        */
+    iter_dest: String,                   /* iter plicae destinationis        */
     initium_dest: i32,                   /* numerus versus initialis in dest    */
     finis_dest: i32,                     /* numerus versus finalis in dest      */
     magnitudo: i32,                      /* versus totales (Nv)                 */
@@ -42,13 +42,13 @@ struct Translatio {
 }
 
 struct VersusOperatio {
-    numerus: i32,       /* numerus versus in fasciculo         */
+    numerus: i32,       /* numerus versus in plica         */
     additum: bool,      /* verum = additum (+), falsum = sublatum (-) */
     argumentum: String, /* textus versus                       */
 }
 
-struct MutatioFasciculi {
-    iter: String, /* iter fasciculi                      */
+struct MutatioPlicae {
+    iter: String, /* iter plicae                      */
     operationes: Vec<VersusOperatio>,
 }
 
@@ -58,12 +58,12 @@ struct VersusAdditus {
 }
 
 /* =========================================================================
- *  Lectio fasciculi e disco (cum cache)
+ *  Lectio plicae e disco (cum cache)
  * ========================================================================= */
 
-fn lege_fasciculum(iter: &str) -> Vec<String> {
+fn lege_plicam(iter: &str) -> Vec<String> {
     let argumentum = fs::read_to_string(iter).unwrap_or_else(|err| {
-        eprintln!("ERROR: fasciculus '{}' aperiri non potest: {}", iter, err);
+        eprintln!("ERROR: plica '{}' aperiri non potest: {}", iter, err);
         std::process::exit(1);
     });
     /* versus[0] vacuus est (index 1-based) */
@@ -74,9 +74,9 @@ fn lege_fasciculum(iter: &str) -> Vec<String> {
     versus
 }
 
-fn cape_fasciculum<'a>(cache: &'a mut HashMap<String, Vec<String>>, iter: &str) -> &'a Vec<String> {
+fn cape_plicam<'a>(cache: &'a mut HashMap<String, Vec<String>>, iter: &str) -> &'a Vec<String> {
     if !cache.contains_key(iter) {
-        let versus = lege_fasciculum(iter);
+        let versus = lege_plicam(iter);
         cache.insert(iter.to_string(), versus);
     }
     cache.get(iter).unwrap()
@@ -105,9 +105,9 @@ fn lege_numerum(octeti: &[u8], initium: usize) -> (i32, usize) {
 }
 
 struct StaturDdiff {
-    fasciculi: Vec<Fasciculus>,
+    plicae: Vec<Plica>,
     translationes: Vec<Translatio>,
-    mutat_fasc: Vec<MutatioFasciculi>,
+    mutat_plic: Vec<MutatioPlicae>,
 }
 
 fn resolve_ddiff() -> StaturDdiff {
@@ -121,9 +121,9 @@ fn resolve_ddiff() -> StaturDdiff {
     let num_vs = versus.len();
     let mut i = 0usize;
 
-    let mut fasciculi: Vec<Fasciculus> = Vec::new();
+    let mut plicae: Vec<Plica> = Vec::new();
     let mut translationes: Vec<Translatio> = Vec::new();
-    let mut mutat_fasc: Vec<MutatioFasciculi> = Vec::new();
+    let mut mutat_plic: Vec<MutatioPlicae> = Vec::new();
 
     /* ---- I. Caput: "ddiff versio I" ---- */
     if i >= num_vs || versus[i] != "ddiff versio I" {
@@ -135,9 +135,9 @@ fn resolve_ddiff() -> StaturDdiff {
         i += 1;
     }
 
-    /* ---- II. FASCICULI ---- */
-    if i >= num_vs || versus[i] != "FASCICULI" {
-        eprintln!("ERROR: sectio FASCICULI deest");
+    /* ---- II. PLICAE ---- */
+    if i >= num_vs || versus[i] != "PLICAE" {
+        eprintln!("ERROR: sectio PLICAE deest");
         std::process::exit(1);
     }
     i += 1;
@@ -149,7 +149,7 @@ fn resolve_ddiff() -> StaturDdiff {
             && (octeti[0] == b'D' || octeti[0] == b'C' || octeti[0] == b'M')
             && octeti[1] == b' '
         {
-            fasciculi.push(Fasciculus {
+            plicae.push(Plica {
                 genus: genus_ex_littera(octeti[0] as char),
                 iter: lin[2..].to_string(),
             });
@@ -256,7 +256,7 @@ fn resolve_ddiff() -> StaturDdiff {
                 dist_cur = lin_d[3..].parse::<i32>().unwrap_or(0);
                 plus_idx = 0;
             } else if lin_d.starts_with("  -") {
-                /* Versus fontis — non opus est, e fasciculo legemus */
+                /* Versus fontis — non opus est, e plica legemus */
             } else if lin_d.starts_with("  +") {
                 if dist_cur >= 0 && (dist_cur + plus_idx) < magnitudo {
                     substitutiones[(dist_cur + plus_idx) as usize] = Some(lin_d[3..].to_string());
@@ -288,9 +288,9 @@ fn resolve_ddiff() -> StaturDdiff {
     /* ---- IV. MUTATIONES ---- */
     if i >= num_vs || !versus[i].starts_with("MUTATIONES") {
         return StaturDdiff {
-            fasciculi,
+            plicae,
             translationes,
-            mutat_fasc,
+            mutat_plic,
         };
     }
     i += 1;
@@ -308,7 +308,7 @@ fn resolve_ddiff() -> StaturDdiff {
             continue;
         }
 
-        let mut mf = MutatioFasciculi {
+        let mut mf = MutatioPlicae {
             iter: lin[2..].to_string(),
             operationes: Vec::new(),
         };
@@ -338,18 +338,18 @@ fn resolve_ddiff() -> StaturDdiff {
             i += 1; /* transili punctum "." */
         }
 
-        mutat_fasc.push(mf);
+        mutat_plic.push(mf);
     }
 
     StaturDdiff {
-        fasciculi,
+        plicae,
         translationes,
-        mutat_fasc,
+        mutat_plic,
     }
 }
 
 /* =========================================================================
- *  Applicatio: aedificatio fasciculorum novorum
+ *  Applicatio: aedificatio plicarum novorum
  * ========================================================================= */
 
 /* Resolve argumentum destinationis pro indice k intra translationem */
@@ -364,11 +364,11 @@ fn resolve_versum(t: &Translatio, k: i32, fons: &Vec<String>) -> String {
     String::new()
 }
 
-/* Fasciculus creatus: omnes versus ex translationibus et mutationibus */
+/* Plica creatus: omnes versus ex translationibus et mutationibus */
 fn aedifica_creatum(
     iter: &str,
     translationes: &[Translatio],
-    mutat_fasc: &[MutatioFasciculi],
+    mutat_plic: &[MutatioPlicae],
     cache: &mut HashMap<String, Vec<String>>,
 ) -> Option<Vec<String>> {
     let mut maximus: i32 = 0;
@@ -379,7 +379,7 @@ fn aedifica_creatum(
         }
     }
 
-    for mf in mutat_fasc.iter() {
+    for mf in mutat_plic.iter() {
         if mf.iter == iter {
             for op in mf.operationes.iter() {
                 if op.additum && op.numerus > maximus {
@@ -401,7 +401,7 @@ fn aedifica_creatum(
         if t.iter_dest != iter {
             continue;
         }
-        let fons = cape_fasciculum(cache, &t.iter_fontis).clone();
+        let fons = cape_plicam(cache, &t.iter_fontis).clone();
 
         for k in 0..t.magnitudo {
             let lin_dest = t.initium_dest + k;
@@ -412,7 +412,7 @@ fn aedifica_creatum(
     }
 
     /* Imple ex mutationibus */
-    for mf in mutat_fasc.iter() {
+    for mf in mutat_plic.iter() {
         if mf.iter != iter {
             continue;
         }
@@ -431,15 +431,15 @@ fn aedifica_creatum(
     Some(resultatum)
 }
 
-/* Fasciculus mutatus: veteres versus emendantur */
+/* Plica mutatus: veteres versus emendantur */
 fn aedifica_mutatum(
     iter: &str,
     translationes: &[Translatio],
-    mutat_fasc: &[MutatioFasciculi],
+    mutat_plic: &[MutatioPlicae],
     cache: &mut HashMap<String, Vec<String>>,
 ) -> Option<Vec<String>> {
-    /* I. Lege fasciculum veterem */
-    let veteres = cape_fasciculum(cache, iter).clone();
+    /* I. Lege plicam veterem */
+    let veteres = cape_plicam(cache, iter).clone();
     let num_vet = veteres.len() - 1; /* index 0 vacuus */
 
     /* II. Nota versus sublatos */
@@ -456,7 +456,7 @@ fn aedifica_mutatum(
         }
     }
 
-    for mf in mutat_fasc.iter() {
+    for mf in mutat_plic.iter() {
         if mf.iter != iter {
             continue;
         }
@@ -474,7 +474,7 @@ fn aedifica_mutatum(
         if t.iter_dest != iter {
             continue;
         }
-        let fons = cape_fasciculum(cache, &t.iter_fontis).clone();
+        let fons = cape_plicam(cache, &t.iter_fontis).clone();
 
         for k in 0..t.magnitudo {
             addita.push(VersusAdditus {
@@ -484,7 +484,7 @@ fn aedifica_mutatum(
         }
     }
 
-    for mf in mutat_fasc.iter() {
+    for mf in mutat_plic.iter() {
         if mf.iter != iter {
             continue;
         }
@@ -505,7 +505,7 @@ fn aedifica_mutatum(
     let num_sublata = sublatum[1..].iter().filter(|&&s| s).count();
     let num_nov = num_vet - num_sublata + addita.len();
 
-    /* V. Aedifica fasciculum novum */
+    /* V. Aedifica plicam novum */
     let mut novi: Vec<String> = vec![String::new()]; /* index 0 vacuus */
     let mut cursor_vet: usize = 1;
     let mut cursor_nov: usize = 1;
@@ -533,7 +533,7 @@ fn aedifica_mutatum(
 }
 
 /* =========================================================================
- *  Scriptio et deletio fasciculorum
+ *  Scriptio et deletio plicarum
  * ========================================================================= */
 
 /* Creat directoria parentalia (similis mkdir -p) */
@@ -545,10 +545,10 @@ fn crea_directoria(iter: &str) {
     }
 }
 
-fn scribe_fasciculum(iter: &str, versus: &[String]) {
+fn scribe_plicam(iter: &str, versus: &[String]) {
     crea_directoria(iter);
     let mut f = fs::File::create(iter).unwrap_or_else(|err| {
-        eprintln!("ERROR: fasciculus '{}' scribi non potest: {}", iter, err);
+        eprintln!("ERROR: plica '{}' scribi non potest: {}", iter, err);
         std::process::exit(1);
     });
     /* versus[0] vacuus est; scribe versus[1..] */
@@ -563,8 +563,8 @@ fn scribe_fasciculum(iter: &str, versus: &[String]) {
 
 fn applica(status: StaturDdiff) {
     eprintln!(
-        "APPLICATIO: {} fasciculi, {} translationes",
-        status.fasciculi.len(),
+        "APPLICATIO: {} plicae, {} translationes",
+        status.plicae.len(),
         status.translationes.len()
     );
 
@@ -573,19 +573,19 @@ fn applica(status: StaturDdiff) {
     /* Phase I: aedifica argumenta nova in memoria */
     let mut argumenta: Vec<Option<Vec<String>>> = Vec::new();
 
-    for f in status.fasciculi.iter() {
+    for f in status.plicae.iter() {
         if f.genus == CREATUM {
             argumenta.push(aedifica_creatum(
                 &f.iter,
                 &status.translationes,
-                &status.mutat_fasc,
+                &status.mutat_plic,
                 &mut cache,
             ));
         } else if f.genus == MUTATUM {
             argumenta.push(aedifica_mutatum(
                 &f.iter,
                 &status.translationes,
-                &status.mutat_fasc,
+                &status.mutat_plic,
                 &mut cache,
             ));
         } else {
@@ -593,29 +593,29 @@ fn applica(status: StaturDdiff) {
         }
     }
 
-    /* Phase II: scribe fasciculos creatos et mutatos */
+    /* Phase II: scribe plicas creatos et mutatos */
     let mut num_cre = 0;
     let mut num_mut_n = 0;
     let mut num_del = 0;
 
-    for (idx, f) in status.fasciculi.iter().enumerate() {
+    for (idx, f) in status.plicae.iter().enumerate() {
         if f.genus == CREATUM {
             if let Some(ref vs) = argumenta[idx] {
-                scribe_fasciculum(&f.iter, vs);
+                scribe_plicam(&f.iter, vs);
                 eprintln!("  C {} ({} versus)", f.iter, vs.len() - 1);
                 num_cre += 1;
             }
         } else if f.genus == MUTATUM {
             if let Some(ref vs) = argumenta[idx] {
-                scribe_fasciculum(&f.iter, vs);
+                scribe_plicam(&f.iter, vs);
                 eprintln!("  M {} ({} versus)", f.iter, vs.len() - 1);
                 num_mut_n += 1;
             }
         }
     }
 
-    /* Phase III: dele fasciculos */
-    for f in status.fasciculi.iter() {
+    /* Phase III: dele plicas */
+    for f in status.plicae.iter() {
         if f.genus != DELETUM {
             continue;
         }
@@ -626,7 +626,7 @@ fn applica(status: StaturDdiff) {
             }
             Err(err) if err.kind() != io::ErrorKind::NotFound => {
                 eprintln!(
-                    "MONITUM: fasciculus '{}' deleri non potest: {}",
+                    "MONITUM: plica '{}' deleri non potest: {}",
                     f.iter, err
                 );
             }

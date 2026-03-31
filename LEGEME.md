@@ -1,9 +1,9 @@
 # ddiff
 
-Forma compacta differentiarum quae translationes truncorum inter fasciculos detegit.
+Forma compacta differentiarum quae translationes truncorum inter plicas detegit.
 
-Cum codex reficitur dividendo fasciculum magnum in modulos, `git diff`
-totum fasciculum veterem ut deletum ostendit et omnes fasciculos novos ut
+Cum codex reficitur dividendo plicam magnum in modulos, `git diff`
+totum plicam veterem ut deletum ostendit et omnes plicas novos ut
 creatos — etiamsi maior pars codicis solum translata est. `ddiff` differentiam
 unitam e flumine stdin legit, truncos translatos invenit, et eos separatim
 a mutationibus veris refert.
@@ -39,15 +39,15 @@ ad stdout scribitur. Summarium ad stderr.
 
 Exitus tres partes habet.
 
-### FASCICULI
+### PLICAE
 
-Omnes fasciculos in differentia cum operatione sua enumerat:
+Omnes plicas in differentia cum operatione sua enumerat:
 
 ```
-FASCICULI
-D iter/ad/fasciculum_deletum.py
-C iter/ad/fasciculum_creatum.py
-M iter/ad/fasciculum_mutatum.py
+PLICAE
+D iter/ad/plicam_deletum.py
+C iter/ad/plicam_creatum.py
+M iter/ad/plicam_mutatum.py
 ```
 
 `D` = deletum, `C` = creatum, `M` = mutatum.
@@ -98,20 +98,20 @@ C iter/ad/novum/__init__.py
   +1 from .charts import insert_chart
   +2 from .formatting import apply_shape_format
 .
-M iter/ad/fasciculum_mutatum.py
+M iter/ad/plicam_mutatum.py
   -15 import vetus.modulus as m
   +15 import novus.modulus as m
 .
 ```
 
 Quisque versus praefixum `-` vel `+` habet, sequente numero versus in
-fasciculo vetere vel novo respective. Punctum `.` finem sectionis cuiusque
-fasciculi signat.
+plica vetere vel novo respective. Punctum `.` finem sectionis cuiusque
+plicae signat.
 
 ## dpatch — instrumentum applicationis
 
-`dpatch` formam ddiff e flumine stdin legit et mutationes in fasciculos
-locales applicat, statum novum e fasciculis veteribus et ddiff
+`dpatch` formam ddiff e flumine stdin legit et mutationes in plicas
+locales applicat, statum novum e plicaes veteribus et ddiff
 reconstruens.
 
 ### Aedificatio
@@ -132,15 +132,15 @@ cc -O2 -o dpatch dpatch.c
 ./ddiff < aliqua.diff | ./dpatch
 ```
 
-Vel e fasciculo ddiff servato:
+Vel e plica ddiff servato:
 
 ```
 ./dpatch < servatum.ddiff
 ```
 
 `dpatch` in directorio praesenti operatur. Fasciculos fontis in ddiff
-nominatos legit, translationes et mutationes applicat, fasciculos creatos
-et mutatos scribit, fasciculos deletos removet. Directoria parentalia
+nominatos legit, translationes et mutationes applicat, plicas creatos
+et mutatos scribit, plicas deletos removet. Directoria parentalia
 automatice creantur.
 
 Nuntii status ad stderr scribuntur.
@@ -148,9 +148,9 @@ Nuntii status ad stderr scribuntur.
 ## Probationes
 
 Probationes totum circuitum verificant: `diff -ruN` differentiam unitam
-inter `probata/veterum/` (fasciculi veteres) et `probata/novum/` (fasciculi novi)
-gignit, `ddiff` eam comprimit, `dpatch` in copiam fasciculorum veterum
-applicat, et exitus cum fasciculis novis exspectatis comparatur.
+inter `probata/veterum/` (plicae veteres) et `probata/novum/` (plicae novi)
+gignit, `ddiff` eam comprimit, `dpatch` in copiam plicarum veterum
+applicat, et exitus cum plicaes novis exspectatis comparatur.
 
 ```
 face proba
@@ -169,20 +169,20 @@ Gradus probationis `face proba`:
 
 ## Inversibilitas
 
-Forma principio inversibilis est. Datis fasciculis pristinis et ddiff:
+Forma principio inversibilis est. Datis plicaes pristinis et ddiff:
 
-1. Versus in fontibus TRANSLATIONUM e fasciculis veteribus tolluntur et
-   (deltis applicatis) in positiones destinationis fasciculorum novorum
+1. Versus in fontibus TRANSLATIONUM e plicaes veteribus tolluntur et
+   (deltis applicatis) in positiones destinationis plicarum novorum
    ponuntur.
-2. Versus in MUTATIONIBUS cum `-` e fasciculis veteribus tolluntur.
-3. Versus in MUTATIONIBUS cum `+` fasciculis novis adduntur.
+2. Versus in MUTATIONIBUS cum `-` e plicaes veteribus tolluntur.
+3. Versus in MUTATIONIBUS cum `+` plicaes novis adduntur.
 4. Ceteri versus immutati manent.
 
 ## Algorithmus
 
 1. **Resolutio**: differentia unita in versus sublatos et additos pro
-   quoque fasciculo resolvitur.
-2. **Histogramma distantiarum**: pro quoque pare fasciculorum, quisque
+   quoque plica resolvitur.
+2. **Histogramma distantiarum**: pro quoque pare plicarum, quisque
    versus per sigillum notatur et distantiae `j − i` pro omnibus paribus
    concordantibus `(sublata[i], addita[j])` numerantur. Frequentia magna
    ad aliquam distantiam truncum magnum ad illam translationem indicat.

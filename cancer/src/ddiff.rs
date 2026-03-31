@@ -2,7 +2,7 @@
  *  DDIFF — INSTRUMENTUM DIFFERENTIARUM COMPACTARUM
  *
  *  Hoc instrumentum differentiam unitam (unified diff) legit e flumine
- *  stdin, translationes truncorum inter fasciculos detegit, et formam
+ *  stdin, translationes truncorum inter plicas detegit, et formam
  *  compactam "ddiff" ad stdout scribit.
  *
  *  Translatio fidelis ex lingua C in linguam Rust.
@@ -21,7 +21,7 @@ const LIMEN_TRUNCI: i32 = 5; /* versus minimi pro translatione  */
 const LIMEN_LACUNAE: i32 = 3; /* hiatus maximus intra truncum    */
 const LIMEN_FREQUENTIAE: i32 = 30; /* versus nimis communes ignorantur */
 
-/* ---------- Genera fasciculorum ---------- */
+/* ---------- Genera plicarum ---------- */
 
 const MUTATUM: i32 = 0;
 const DELETUM: i32 = 1;
@@ -32,7 +32,7 @@ const CREATUM: i32 = 2;
 struct Versus {
     argumentum: String, /* textus versus (sine praefixo +/-)      */
     sigillum: u64,      /* FNV-1a sigillum argumenti               */
-    numerus: i32,       /* numerus versus in fasciculo (1-index)   */
+    numerus: i32,       /* numerus versus in plica (1-index)   */
     translatum: bool,   /* verum si a translatione iam possessus   */
 }
 
@@ -40,7 +40,7 @@ struct SeriesVersuum {
     res: Vec<Versus>,
 }
 
-struct Fasciculus {
+struct Plica {
     iter_vetus: String,     /* iter pristinum (a/ latus)   */
     iter_novus: String,     /* iter novum     (b/ latus)   */
     genus: i32,             /* MUTATUM / DELETUM / CREATUM */
@@ -50,14 +50,14 @@ struct Fasciculus {
 
 #[derive(Clone)]
 struct Translatio {
-    index_fontis: usize,        /* index fasciculi fontis           */
-    index_destinationis: usize, /* index fasciculi destinationis    */
+    index_fontis: usize,        /* index plicae fontis           */
+    index_destinationis: usize, /* index plicae destinationis    */
     initium_fontis: usize,      /* primus index in sublata[] fontis */
     initium_dest: usize,        /* primus index in addita[] dest    */
     magnitudo: usize,           /* versus totales in trunco         */
     concordantes: usize,        /* versus exacte concordantes       */
-    numerus_fontis: i32,        /* numerus versus in fasciculo vet. */
-    numerus_dest: i32,          /* numerus versus in fasciculo novo */
+    numerus_fontis: i32,        /* numerus versus in plica vet. */
+    numerus_dest: i32,          /* numerus versus in plica novo */
 }
 
 struct ParSigilli {
@@ -122,7 +122,7 @@ fn extrahe_iter(p: &str) -> String {
  *  Resolutio differentiae ex stdin
  * ========================================================================= */
 
-fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
+fn resolve_differentiam(plicae: &mut Vec<Plica>) {
     /* I. Lege totum flumen stdin in thesaurum */
     let mut thesaurus = String::new();
     io::stdin()
@@ -132,22 +132,22 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
     /* II. Divide in versus */
     let versus: Vec<&str> = thesaurus.lines().collect();
 
-    /* III. Resolve fasciculos, segmenta, versus sublatos et additos */
+    /* III. Resolve plicas, segmenta, versus sublatos et additos */
     let mut idx: Option<usize> = None;
     let mut num_vet: i32 = 0;
     let mut num_nov: i32 = 0;
 
     for lin in &versus {
-        /* Novus fasciculus incipit */
+        /* Novus plica incipit */
         if lin.starts_with("diff ") {
-            fasciculi.push(Fasciculus {
+            plicae.push(Plica {
                 iter_vetus: String::new(),
                 iter_novus: String::new(),
                 genus: MUTATUM,
                 sublata: SeriesVersuum { res: Vec::new() },
                 addita: SeriesVersuum { res: Vec::new() },
             });
-            idx = Some(fasciculi.len() - 1);
+            idx = Some(plicae.len() - 1);
             continue;
         }
         let fi = match idx {
@@ -156,11 +156,11 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
         };
 
         if lin.starts_with("deleted file") {
-            fasciculi[fi].genus = DELETUM;
+            plicae[fi].genus = DELETUM;
             continue;
         }
         if lin.starts_with("new file") {
-            fasciculi[fi].genus = CREATUM;
+            plicae[fi].genus = CREATUM;
             continue;
         }
 
@@ -168,18 +168,18 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
         if lin.starts_with("--- ") {
             let iter = extrahe_iter(&lin[4..]);
             if iter == "/dev/null" {
-                fasciculi[fi].genus = CREATUM;
+                plicae[fi].genus = CREATUM;
             }
-            fasciculi[fi].iter_vetus = iter;
+            plicae[fi].iter_vetus = iter;
             continue;
         }
         /* Iter novum */
         if lin.starts_with("+++ ") {
             let iter = extrahe_iter(&lin[4..]);
             if iter == "/dev/null" {
-                fasciculi[fi].genus = DELETUM;
+                plicae[fi].genus = DELETUM;
             }
-            fasciculi[fi].iter_novus = iter;
+            plicae[fi].iter_novus = iter;
             continue;
         }
 
@@ -189,11 +189,11 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
             let (s_vet, n_vet, s_nov, n_nov) = resolve_caput_segmenti(q);
             num_vet = s_vet;
             num_nov = s_nov;
-            if s_vet == 0 && n_vet == 0 && fasciculi[fi].genus == MUTATUM {
-                fasciculi[fi].genus = CREATUM;
+            if s_vet == 0 && n_vet == 0 && plicae[fi].genus == MUTATUM {
+                plicae[fi].genus = CREATUM;
             }
-            if s_nov == 0 && n_nov == 0 && fasciculi[fi].genus == MUTATUM {
-                fasciculi[fi].genus = DELETUM;
+            if s_nov == 0 && n_nov == 0 && plicae[fi].genus == MUTATUM {
+                plicae[fi].genus = DELETUM;
             }
             continue;
         }
@@ -212,10 +212,10 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
 
         /* Versus contenti */
         if lin.starts_with('-') {
-            adde_versum(&mut fasciculi[fi].sublata, &lin[1..], num_vet);
+            adde_versum(&mut plicae[fi].sublata, &lin[1..], num_vet);
             num_vet += 1;
         } else if lin.starts_with('+') {
-            adde_versum(&mut fasciculi[fi].addita, &lin[1..], num_nov);
+            adde_versum(&mut plicae[fi].addita, &lin[1..], num_nov);
             num_nov += 1;
         } else if lin.starts_with(' ') {
             num_vet += 1;
@@ -224,7 +224,7 @@ fn resolve_differentiam(fasciculi: &mut Vec<Fasciculus>) {
     }
 
     /* Tutela: imple itinera vacua */
-    for f in fasciculi.iter_mut() {
+    for f in plicae.iter_mut() {
         if f.iter_vetus.is_empty() {
             f.iter_vetus = "/dev/null".to_string();
         }
@@ -293,17 +293,17 @@ fn lege_numerum(filum: &str, initium: usize) -> (i32, usize) {
 }
 
 /* =========================================================================
- *  Investigatio translationum inter fasciculos
+ *  Investigatio translationum inter plicas
  * ========================================================================= */
 
 fn inveni_inter(
-    fasciculi: &mut Vec<Fasciculus>,
+    plicae: &mut Vec<Plica>,
     candidati: &mut Vec<Translatio>,
     f_s: usize,
     f_d: usize,
 ) {
-    let n = fasciculi[f_s].sublata.res.len();
-    let m = fasciculi[f_d].addita.res.len();
+    let n = plicae[f_s].sublata.res.len();
+    let m = plicae[f_d].addita.res.len();
     if n == 0 || m == 0 {
         return;
     }
@@ -312,7 +312,7 @@ fn inveni_inter(
     let mut indicium: Vec<ParSigilli> = Vec::with_capacity(m);
     for j in 0..m {
         indicium.push(ParSigilli {
-            sigillum: fasciculi[f_d].addita.res[j].sigillum,
+            sigillum: plicae[f_d].addita.res[j].sigillum,
             index: j,
         });
     }
@@ -324,7 +324,7 @@ fn inveni_inter(
     let mut histogramma: Vec<i32> = vec![0; amplitudo];
 
     for i in 0..n {
-        let sig = fasciculi[f_s].sublata.res[i].sigillum;
+        let sig = plicae[f_s].sublata.res[i].sigillum;
 
         /* Quaestio binaria: primus index ubi sigillum >= sig */
         let p = indicium.partition_point(|ps| ps.sigillum < sig);
@@ -373,7 +373,7 @@ fn inveni_inter(
         let mut conc: Vec<usize> = Vec::new();
         for k in (k_min as usize)..(k_max as usize) {
             let j = (k as i64 + dist) as usize;
-            if fasciculi[f_s].sublata.res[k].sigillum == fasciculi[f_d].addita.res[j].sigillum {
+            if plicae[f_s].sublata.res[k].sigillum == plicae[f_d].addita.res[j].sigillum {
                 conc.push(k);
             }
         }
@@ -413,8 +413,8 @@ fn inveni_inter(
                 initium_dest: (k_init as i64 + dist) as usize,
                 magnitudo: magn,
                 concordantes: num_in_trunco,
-                numerus_fontis: fasciculi[f_s].sublata.res[k_init].numerus,
-                numerus_dest: fasciculi[f_d].addita.res[(k_init as i64 + dist) as usize].numerus,
+                numerus_fontis: plicae[f_s].sublata.res[k_init].numerus,
+                numerus_dest: plicae[f_d].addita.res[(k_init as i64 + dist) as usize].numerus,
             };
             candidati.push(t);
         }
@@ -423,7 +423,7 @@ fn inveni_inter(
 
 /* Electio avara */
 fn elige_translationes(
-    fasciculi: &mut Vec<Fasciculus>,
+    plicae: &mut Vec<Plica>,
     candidati: &mut Vec<Translatio>,
     translationes: &mut Vec<Translatio>,
 ) {
@@ -446,8 +446,8 @@ fn elige_translationes(
             let occupatum = if k == c.magnitudo {
                 true
             } else {
-                fasciculi[c.index_fontis].sublata.res[c.initium_fontis + k].translatum
-                    || fasciculi[c.index_destinationis].addita.res[c.initium_dest + k].translatum
+                plicae[c.index_fontis].sublata.res[c.initium_fontis + k].translatum
+                    || plicae[c.index_destinationis].addita.res[c.initium_dest + k].translatum
             };
 
             if !occupatum {
@@ -463,13 +463,13 @@ fn elige_translationes(
                     pars.initium_dest += ip;
                     pars.magnitudo = lon_partis;
                     pars.numerus_fontis =
-                        fasciculi[c.index_fontis].sublata.res[pars.initium_fontis].numerus;
+                        plicae[c.index_fontis].sublata.res[pars.initium_fontis].numerus;
                     pars.numerus_dest =
-                        fasciculi[c.index_destinationis].addita.res[pars.initium_dest].numerus;
+                        plicae[c.index_destinationis].addita.res[pars.initium_dest].numerus;
                     pars.concordantes = 0;
                     for j in 0..lon_partis {
-                        if fasciculi[c.index_fontis].sublata.res[pars.initium_fontis + j].sigillum
-                            == fasciculi[c.index_destinationis].addita.res[pars.initium_dest + j]
+                        if plicae[c.index_fontis].sublata.res[pars.initium_fontis + j].sigillum
+                            == plicae[c.index_destinationis].addita.res[pars.initium_dest + j]
                                 .sigillum
                         {
                             pars.concordantes += 1;
@@ -478,9 +478,9 @@ fn elige_translationes(
 
                     /* Posside versus */
                     for j in 0..lon_partis {
-                        fasciculi[c.index_fontis].sublata.res[pars.initium_fontis + j].translatum =
+                        plicae[c.index_fontis].sublata.res[pars.initium_fontis + j].translatum =
                             true;
-                        fasciculi[c.index_destinationis].addita.res[pars.initium_dest + j]
+                        plicae[c.index_destinationis].addita.res[pars.initium_dest + j]
                             .translatum = true;
                     }
                     translationes.push(pars);
@@ -491,26 +491,26 @@ fn elige_translationes(
     }
 }
 
-/* Invenit omnes translationes inter omnia paria fasciculorum */
-fn inveni_omnes(fasciculi: &mut Vec<Fasciculus>, translationes: &mut Vec<Translatio>) {
+/* Invenit omnes translationes inter omnia paria plicarum */
+fn inveni_omnes(plicae: &mut Vec<Plica>, translationes: &mut Vec<Translatio>) {
     let mut candidati: Vec<Translatio> = Vec::new();
-    let num_fasc = fasciculi.len();
-    for s in 0..num_fasc {
-        for d in 0..num_fasc {
+    let num_plic = plicae.len();
+    for s in 0..num_plic {
+        for d in 0..num_plic {
             if s != d {
-                inveni_inter(fasciculi, &mut candidati, s, d);
+                inveni_inter(plicae, &mut candidati, s, d);
             }
         }
     }
-    elige_translationes(fasciculi, &mut candidati, translationes);
+    elige_translationes(plicae, &mut candidati, translationes);
 }
 
 /* =========================================================================
  *  Scriptio formae ddiff ad stdout
  * ========================================================================= */
 
-/* Iter canonicum fasciculi (non "/dev/null") */
-fn iter_fasciculi(f: &Fasciculus) -> &str {
+/* Iter canonicum plicae (non "/dev/null") */
+fn iter_plicae(f: &Plica) -> &str {
     if f.genus == DELETUM {
         &f.iter_vetus
     } else {
@@ -527,7 +527,7 @@ fn littera_generis(genus: i32) -> char {
     }
 }
 
-fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>) {
+fn scribe_ddiff(plicae: &Vec<Plica>, translationes: &mut Vec<Translatio>) {
     let stdout = io::stdout();
     let mut scriptor = stdout.lock();
 
@@ -535,14 +535,14 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
     writeln!(scriptor, "ddiff versio I").unwrap();
     writeln!(scriptor).unwrap();
 
-    /* ---- FASCICULI ---- */
-    writeln!(scriptor, "FASCICULI").unwrap();
-    for f in fasciculi.iter() {
+    /* ---- PLICAE ---- */
+    writeln!(scriptor, "PLICAE").unwrap();
+    for f in plicae.iter() {
         writeln!(
             scriptor,
             "{} {}",
             littera_generis(f.genus),
-            iter_fasciculi(f)
+            iter_plicae(f)
         )
         .unwrap();
     }
@@ -559,8 +559,8 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
     writeln!(scriptor, "TRANSLATIONES {}", translationes.len()).unwrap();
 
     for t in translationes.iter() {
-        let fs = &fasciculi[t.index_fontis];
-        let fd = &fasciculi[t.index_destinationis];
+        let fs = &plicae[t.index_fontis];
+        let fd = &plicae[t.index_destinationis];
         let it_f = &fs.iter_vetus;
         let it_d = &fd.iter_novus;
         let dissim = t.magnitudo - t.concordantes;
@@ -630,7 +630,7 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
 
     /* ---- MUTATIONES ---- */
     writeln!(scriptor, "MUTATIONES").unwrap();
-    for f in fasciculi.iter() {
+    for f in plicae.iter() {
         let mut habet = false;
 
         for v in f.sublata.res.iter() {
@@ -640,7 +640,7 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
                         scriptor,
                         "{} {}",
                         littera_generis(f.genus),
-                        iter_fasciculi(f)
+                        iter_plicae(f)
                     )
                     .unwrap();
                     habet = true;
@@ -655,7 +655,7 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
                         scriptor,
                         "{} {}",
                         littera_generis(f.genus),
-                        iter_fasciculi(f)
+                        iter_plicae(f)
                     )
                     .unwrap();
                     habet = true;
@@ -677,7 +677,7 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
     }
     let mut rel_sub = 0usize;
     let mut rel_add = 0usize;
-    for f in fasciculi.iter() {
+    for f in plicae.iter() {
         for v in f.sublata.res.iter() {
             if !v.translatum {
                 rel_sub += 1;
@@ -690,8 +690,8 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
         }
     }
     eprintln!(
-        "SUMMARIUM: {} fasciculi, {} translationes ({} versus, {} dissimilia)",
-        fasciculi.len(),
+        "SUMMARIUM: {} plicae, {} translationes ({} versus, {} dissimilia)",
+        plicae.len(),
         translationes.len(),
         tot_trans,
         tot_dissim
@@ -704,10 +704,10 @@ fn scribe_ddiff(fasciculi: &Vec<Fasciculus>, translationes: &mut Vec<Translatio>
  * ========================================================================= */
 
 fn main() {
-    let mut fasciculi: Vec<Fasciculus> = Vec::new();
+    let mut plicae: Vec<Plica> = Vec::new();
     let mut translationes: Vec<Translatio> = Vec::new();
 
-    resolve_differentiam(&mut fasciculi);
-    inveni_omnes(&mut fasciculi, &mut translationes);
-    scribe_ddiff(&fasciculi, &mut translationes);
+    resolve_differentiam(&mut plicae);
+    inveni_omnes(&mut plicae, &mut translationes);
+    scribe_ddiff(&plicae, &mut translationes);
 }

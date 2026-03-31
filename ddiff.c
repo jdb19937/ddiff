@@ -2,10 +2,10 @@
  *  DDIFF — INSTRUMENTUM DIFFERENTIARUM COMPACTARUM
  *
  *  Hoc instrumentum differentiam unitam (unified diff) legit e flumine
- *  stdin, translationes truncorum inter fasciculos detegit, et formam
+ *  stdin, translationes truncorum inter plicas detegit, et formam
  *  compactam "ddiff" ad stdout scribit.
  *
- *  Ubi multae functiones inter fasciculos moventur cum paucis mutationibus,
+ *  Ubi multae functiones inter plicas moventur cum paucis mutationibus,
  *  haec forma multo brevior est quam differentia pristina.
  *
  *  Forma ddiff inversibilis est: ex statu pristino et ddiff, status novus
@@ -13,7 +13,8 @@
  *
  *  Compilatio:  cc -O2 -o ddiff ddiff.c
  *  Usus:        git diff ... | ./ddiff
- *               cat exemplum.diff | ./ddiff
+ *               ddiff plica.diff
+ *               ddiff -r vetus/ novus/
  *
  *  Anno MMXXVI
  *
@@ -23,7 +24,7 @@
  *
  *  ddiff versio I
  *
- *  FASCICULI                              — index fasciculorum
+ *  PLICAE                              — index plicarum
  *  {D|C|M} <iter>                         — D=deletum C=creatum M=mutatum
  *
  *  TRANSLATIONES <n>                      — motus truncorum detecti
@@ -51,7 +52,7 @@
 #define LIMEN_LACUNAE        3   /* hiatus maximus intra truncum    */
 #define LIMEN_FREQUENTIAE   30   /* versus nimis communes ignorantur */
 
-/* ---------- Genera fasciculorum ---------- */
+/* ---------- Genera plicarum ---------- */
 
 enum { MUTATUM = 0, DELETUM = 1, CREATUM = 2 };
 
@@ -60,7 +61,7 @@ enum { MUTATUM = 0, DELETUM = 1, CREATUM = 2 };
 typedef struct {
     char     *argumentum;        /* textus versus (sine praefixo +/-)      */
     uint64_t  sigillum;          /* FNV-1a hash argumenti                  */
-    int       numerus;           /* numerus versus in fasciculo (1-index)  */
+    int       numerus;           /* numerus versus in plica (1-index)  */
     int       translatum;        /* 1 si a translatione iam possessus      */
 } Versus;
 
@@ -76,17 +77,17 @@ typedef struct {
     int            genus;        /* MUTATUM / DELETUM / CREATUM */
     SeriesVersuum  sublata;      /* versus sublati  (- lineae)  */
     SeriesVersuum  addita;       /* versus additi   (+ lineae)  */
-} Fasciculus;
+} Plica;
 
 typedef struct {
-    int  index_fontis;           /* index fasciculi fontis           */
-    int  index_destinationis;    /* index fasciculi destinationis    */
+    int  index_fontis;           /* index plicae fontis           */
+    int  index_destinationis;    /* index plicae destinationis    */
     int  initium_fontis;         /* primus index in sublata[] fontis */
     int  initium_dest;           /* primus index in addita[] dest    */
     int  magnitudo;              /* versus totales in trunco         */
     int  concordantes;           /* versus exacte concordantes       */
-    int  numerus_fontis;         /* numerus versus in fasciculo vet. */
-    int  numerus_dest;           /* numerus versus in fasciculo novo */
+    int  numerus_fontis;         /* numerus versus in plica vet. */
+    int  numerus_dest;           /* numerus versus in plica novo */
 } Translatio;
 
 typedef struct {
@@ -96,8 +97,8 @@ typedef struct {
 
 /* ---------- Status globalis ---------- */
 
-static Fasciculus  *fasciculi;
-static int          num_fasc, cap_fasc;
+static Plica  *plicae;
+static int          num_plic, cap_plic;
 
 static Translatio  *candidati;
 static int          num_cand, cap_cand;
@@ -169,14 +170,14 @@ static void adde_versum(SeriesVersuum *sv, const char *argumentum, int numerus)
     v->translatum  = 0;
 }
 
-static int adde_fasciculum(void)
+static int adde_plicam(void)
 {
-    if (num_fasc >= cap_fasc) {
-        cap_fasc = cap_fasc ? cap_fasc * 2 : 32;
-        fasciculi = redimensiona(fasciculi, (size_t)cap_fasc * sizeof(Fasciculus));
+    if (num_plic >= cap_plic) {
+        cap_plic = cap_plic ? cap_plic * 2 : 32;
+        plicae = redimensiona(plicae, (size_t)cap_plic * sizeof(Plica));
     }
-    memset(&fasciculi[num_fasc], 0, sizeof(Fasciculus));
-    return num_fasc++;
+    memset(&plicae[num_plic], 0, sizeof(Plica));
+    return num_plic++;
 }
 
 static void adde_candidatum(const Translatio *t)
@@ -234,17 +235,17 @@ static char *extrahe_iter(const char *p)
 /* =========================================================================
  *  Resolutio differentiae ex stdin
  *
- *  Legit totum flumen, dividit in versus, resolvit in fasciculos
+ *  Legit totum flumen, dividit in versus, resolvit in plicas
  *  cum suis sublatis et additis.
  * ========================================================================= */
 
-static void resolve_differentiam(void)
+static void resolve_differentiam(FILE *fons)
 {
-    /* I. Lege totum flumen stdin in thesaurum */
+    /* I. Lege totum flumen in thesaurum */
     size_t cap_th = 1 << 16, lon_th = 0;
     char *thesaurus = para(cap_th);
     size_t lecta;
-    while ((lecta = fread(thesaurus + lon_th, 1, cap_th - lon_th - 1, stdin)) > 0) {
+    while ((lecta = fread(thesaurus + lon_th, 1, cap_th - lon_th - 1, fons)) > 0) {
         lon_th += lecta;
         if (lon_th + 1 >= cap_th) {
             cap_th *= 2;
@@ -269,21 +270,21 @@ static void resolve_differentiam(void)
         }
     }
 
-    /* III. Resolve fasciculos, segmenta, versus sublatos et additos */
-    int idx = -1;                   /* index fasciculi praesentis */
+    /* III. Resolve plicas, segmenta, versus sublatos et additos */
+    int idx = -1;                   /* index plicae praesentis */
     int num_vet = 0, num_nov = 0;   /* numeri versuum currentium  */
 
     for (int i = 0; i < num_v; i++) {
         const char *lin = versus[i];
 
-        /* Novus fasciculus incipit (diff --git ... vel diff -ruN ...) */
+        /* Novus plica incipit (diff --git ... vel diff -ruN ...) */
         if (strncmp(lin, "diff ", 5) == 0) {
-            idx = adde_fasciculum();
+            idx = adde_plicam();
             continue;
         }
         if (idx < 0) continue;
 
-        Fasciculus *f = &fasciculi[idx];
+        Plica *f = &plicae[idx];
 
         if (strncmp(lin, "deleted file", 12) == 0) {
             f->genus = DELETUM;
@@ -322,8 +323,8 @@ static void resolve_differentiam(void)
             if (*q == ',') { q++; n_nov = (int)strtol(q, (char **)&q, 10); }
             num_vet = s_vet;
             num_nov = s_nov;
-            /* -0,0 = fasciculus vetus vacuus → creatum
-             * +0,0 = fasciculus novus vacuus → deletum */
+            /* -0,0 = plica vetus vacuus → creatum
+             * +0,0 = plica novus vacuus → deletum */
             if (s_vet == 0 && n_vet == 0 && f->genus == MUTATUM)
                 f->genus = CREATUM;
             if (s_nov == 0 && n_nov == 0 && f->genus == MUTATUM)
@@ -355,11 +356,11 @@ static void resolve_differentiam(void)
     }
 
     /* Tutela: imple itinera vacua */
-    for (int i = 0; i < num_fasc; i++) {
-        if (!fasciculi[i].iter_vetus)
-            fasciculi[i].iter_vetus = duplica("/dev/null");
-        if (!fasciculi[i].iter_novus)
-            fasciculi[i].iter_novus = duplica("/dev/null");
+    for (int i = 0; i < num_plic; i++) {
+        if (!plicae[i].iter_vetus)
+            plicae[i].iter_vetus = duplica("/dev/null");
+        if (!plicae[i].iter_novus)
+            plicae[i].iter_novus = duplica("/dev/null");
     }
 
     free(versus);
@@ -368,9 +369,9 @@ static void resolve_differentiam(void)
 }
 
 /* =========================================================================
- *  Investigatio translationum inter fasciculos
+ *  Investigatio translationum inter plicas
  *
- *  Methodus: pro quoque pare fasciculorum (fons, destinatio),
+ *  Methodus: pro quoque pare plicarum (fons, destinatio),
  *  histogramma distantiarum aedificatur. Pro quoque pare versuum
  *  concordantium (sublata[i], addita[j]), distantia d = j − i
  *  computatur. Distantiae frequentes truncos translatos indicant.
@@ -400,13 +401,13 @@ static int quaere_primum(const ParSigilli *idx, int lon, uint64_t sig)
 }
 
 /*
- * Invenit translationes inter fasciculum fontis (f_s)
- * et fasciculum destinationis (f_d).
+ * Invenit translationes inter plicam fontis (f_s)
+ * et plicam destinationis (f_d).
  */
 static void inveni_inter(int f_s, int f_d)
 {
-    Fasciculus *fons = &fasciculi[f_s];
-    Fasciculus *dest = &fasciculi[f_d];
+    Plica *fons = &plicae[f_s];
+    Plica *dest = &plicae[f_d];
     int n = fons->sublata.longitudo;
     int m = dest->addita.longitudo;
     if (n == 0 || m == 0) return;
@@ -543,8 +544,8 @@ static void elige_translationes(void)
 
     for (int i = 0; i < num_cand; i++) {
         Translatio *c  = &candidati[i];
-        Fasciculus *fs = &fasciculi[c->index_fontis];
-        Fasciculus *fd = &fasciculi[c->index_destinationis];
+        Plica *fs = &plicae[c->index_fontis];
+        Plica *fd = &plicae[c->index_destinationis];
 
         /* Inveni partes liberas (non possessas) intra candidatum */
         int initium_partis = -1;
@@ -587,12 +588,12 @@ static void elige_translationes(void)
 }
 
 /*
- * Invenit omnes translationes inter omnia paria fasciculorum.
+ * Invenit omnes translationes inter omnia paria plicarum.
  */
 static void inveni_omnes(void)
 {
-    for (int s = 0; s < num_fasc; s++)
-        for (int d = 0; d < num_fasc; d++)
+    for (int s = 0; s < num_plic; s++)
+        for (int d = 0; d < num_plic; d++)
             if (s != d)
                 inveni_inter(s, d);
     elige_translationes();
@@ -602,8 +603,8 @@ static void inveni_omnes(void)
  *  Scriptio formae ddiff ad stdout
  * ========================================================================= */
 
-/* Iter canonicum fasciculi (non "/dev/null") */
-static const char *iter_fasciculi(const Fasciculus *f)
+/* Iter canonicum plicae (non "/dev/null") */
+static const char *iter_plicae(const Plica *f)
 {
     if (f->genus == DELETUM)
         return f->iter_vetus;
@@ -632,11 +633,11 @@ static void scribe_ddiff(void)
     /* ---- Caput ---- */
     printf("ddiff versio I\n\n");
 
-    /* ---- FASCICULI ---- */
-    printf("FASCICULI\n");
-    for (int i = 0; i < num_fasc; i++)
-        printf("%c %s\n", littera_generis(fasciculi[i].genus),
-               iter_fasciculi(&fasciculi[i]));
+    /* ---- PLICAE ---- */
+    printf("PLICAE\n");
+    for (int i = 0; i < num_plic; i++)
+        printf("%c %s\n", littera_generis(plicae[i].genus),
+               iter_plicae(&plicae[i]));
     printf("\n");
 
     /* ---- TRANSLATIONES ---- */
@@ -645,8 +646,8 @@ static void scribe_ddiff(void)
 
     for (int i = 0; i < num_trans; i++) {
         Translatio *t  = &translationes[i];
-        Fasciculus *fs = &fasciculi[t->index_fontis];
-        Fasciculus *fd = &fasciculi[t->index_destinationis];
+        Plica *fs = &plicae[t->index_fontis];
+        Plica *fd = &plicae[t->index_destinationis];
         const char *it_f = fs->iter_vetus;
         const char *it_d = fd->iter_novus;
         int dissim = t->magnitudo - t->concordantes;
@@ -696,15 +697,15 @@ static void scribe_ddiff(void)
 
     /* ---- MUTATIONES ---- */
     printf("MUTATIONES\n");
-    for (int i = 0; i < num_fasc; i++) {
-        Fasciculus *f = &fasciculi[i];
+    for (int i = 0; i < num_plic; i++) {
+        Plica *f = &plicae[i];
         int habet = 0;
 
         for (int j = 0; j < f->sublata.longitudo; j++) {
             if (!f->sublata.res[j].translatum) {
                 if (!habet) {
                     printf("%c %s\n", littera_generis(f->genus),
-                           iter_fasciculi(f));
+                           iter_plicae(f));
                     habet = 1;
                 }
                 printf("  -%d %s\n", f->sublata.res[j].numerus,
@@ -715,7 +716,7 @@ static void scribe_ddiff(void)
             if (!f->addita.res[j].translatum) {
                 if (!habet) {
                     printf("%c %s\n", littera_generis(f->genus),
-                           iter_fasciculi(f));
+                           iter_plicae(f));
                     habet = 1;
                 }
                 printf("  +%d %s\n", f->addita.res[j].numerus,
@@ -732,16 +733,16 @@ static void scribe_ddiff(void)
         tot_dissim += translationes[i].magnitudo - translationes[i].concordantes;
     }
     int rel_sub = 0, rel_add = 0;
-    for (int i = 0; i < num_fasc; i++) {
-        Fasciculus *f = &fasciculi[i];
+    for (int i = 0; i < num_plic; i++) {
+        Plica *f = &plicae[i];
         for (int j = 0; j < f->sublata.longitudo; j++)
             if (!f->sublata.res[j].translatum) rel_sub++;
         for (int j = 0; j < f->addita.longitudo; j++)
             if (!f->addita.res[j].translatum) rel_add++;
     }
     fprintf(stderr,
-            "SUMMARIUM: %d fasciculi, %d translationes (%d versus, %d dissimilia)\n",
-            num_fasc, num_trans, tot_trans, tot_dissim);
+            "SUMMARIUM: %d plicae, %d translationes (%d versus, %d dissimilia)\n",
+            num_plic, num_trans, tot_trans, tot_dissim);
     fprintf(stderr,
             "           reliqua: -%d +%d versus\n", rel_sub, rel_add);
 }
@@ -750,9 +751,61 @@ static void scribe_ddiff(void)
  *  Princeps
  * ========================================================================= */
 
-int main(void)
+static void auxilium_ddiff(void)
 {
-    resolve_differentiam();
+    printf("ddiff — forma compacta differentiarum\n\n");
+    printf("usus:\n");
+    printf("  ddiff                      legit differentiam unitam e stdin\n");
+    printf("  ddiff <plica>              legit differentiam unitam e plica\n");
+    printf("  ddiff -r <vetus> <novus>   comparat directoria et gignit ddiff\n\n");
+    printf("optiones:\n");
+    printf("  -h, --help                 hoc auxilium ostendit\n\n");
+    printf("exitus structus ad stdout; summarium ad stderr.\n");
+}
+
+int main(int argc, char **argv)
+{
+    if (argc == 2 && (strcmp(argv[1], "-h") == 0 ||
+                      strcmp(argv[1], "--help") == 0)) {
+        auxilium_ddiff();
+        return 0;
+    }
+
+    if (argc == 4 && strcmp(argv[1], "-r") == 0) {
+        char mandatum[4096];
+        snprintf(mandatum, sizeof(mandatum),
+                 "diff -ruN %s %s", argv[2], argv[3]);
+        FILE *fons = popen(mandatum, "r");
+        if (!fons) {
+            fprintf(stderr, "ERROR: 'diff' excitari non potest\n");
+            return 1;
+        }
+        resolve_differentiam(fons);
+        pclose(fons);
+        inveni_omnes();
+        scribe_ddiff();
+        return 0;
+    }
+
+    if (argc == 2) {
+        FILE *fons = fopen(argv[1], "r");
+        if (!fons) {
+            fprintf(stderr, "ERROR: plica '%s' aperiri non potest\n", argv[1]);
+            return 1;
+        }
+        resolve_differentiam(fons);
+        fclose(fons);
+        inveni_omnes();
+        scribe_ddiff();
+        return 0;
+    }
+
+    if (argc != 1) {
+        fprintf(stderr, "ERROR: argumenta non intelleguntur — 'ddiff -h' vide\n");
+        return 1;
+    }
+
+    resolve_differentiam(stdin);
     inveni_omnes();
     scribe_ddiff();
     return 0;
