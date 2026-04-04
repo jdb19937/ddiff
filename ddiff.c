@@ -113,28 +113,37 @@ static int          num_trans, cap_trans;
 static void *para(size_t n)
 {
     void *p = malloc(n);
-    if (!p) { fprintf(stderr, "ERROR: memoria exhausta\n"); exit(1); }
+    if (!p) {
+        fprintf(stderr, "ERROR: memoria exhausta\n");
+        exit(1);
+    }
     return p;
 }
 
 static void *para_pura(size_t numerus, size_t magnitudo)
 {
     void *p = calloc(numerus, magnitudo);
-    if (!p) { fprintf(stderr, "ERROR: memoria exhausta\n"); exit(1); }
+    if (!p) {
+        fprintf(stderr, "ERROR: memoria exhausta\n");
+        exit(1);
+    }
     return p;
 }
 
 static void *redimensiona(void *p, size_t n)
 {
     void *q = realloc(p, n);
-    if (!q) { fprintf(stderr, "ERROR: memoria exhausta\n"); exit(1); }
+    if (!q) {
+        fprintf(stderr, "ERROR: memoria exhausta\n");
+        exit(1);
+    }
     return q;
 }
 
 static char *duplica(const char *filum)
 {
     size_t n = strlen(filum) + 1;
-    char *d = para(n);
+    char *d  = para(n);
     memcpy(d, filum, n);
     return d;
 }
@@ -161,20 +170,20 @@ static void adde_versum(SeriesVersuum *sv, const char *argumentum, int numerus)
 {
     if (sv->longitudo >= sv->capacitas) {
         sv->capacitas = sv->capacitas ? sv->capacitas * 2 : 256;
-        sv->res = redimensiona(sv->res, (size_t)sv->capacitas * sizeof(Versus));
+        sv->res       = redimensiona(sv->res, (size_t)sv->capacitas * sizeof(Versus));
     }
-    Versus *v = &sv->res[sv->longitudo++];
-    v->argumentum  = duplica(argumentum);
-    v->sigillum    = computa_sigillum(argumentum);
-    v->numerus     = numerus;
-    v->translatum  = 0;
+    Versus *v     = &sv->res[sv->longitudo++];
+    v->argumentum = duplica(argumentum);
+    v->sigillum   = computa_sigillum(argumentum);
+    v->numerus    = numerus;
+    v->translatum = 0;
 }
 
 static int adde_plicam(void)
 {
     if (num_plic >= cap_plic) {
         cap_plic = cap_plic ? cap_plic * 2 : 32;
-        plicae = redimensiona(plicae, (size_t)cap_plic * sizeof(Plica));
+        plicae   = redimensiona(plicae, (size_t)cap_plic * sizeof(Plica));
     }
     memset(&plicae[num_plic], 0, sizeof(Plica));
     return num_plic++;
@@ -183,7 +192,7 @@ static int adde_plicam(void)
 static void adde_candidatum(const Translatio *t)
 {
     if (num_cand >= cap_cand) {
-        cap_cand = cap_cand ? cap_cand * 2 : 256;
+        cap_cand  = cap_cand ? cap_cand * 2 : 256;
         candidati = redimensiona(candidati, (size_t)cap_cand * sizeof(Translatio));
     }
     candidati[num_cand++] = *t;
@@ -192,7 +201,7 @@ static void adde_candidatum(const Translatio *t)
 static void adde_translationem(const Translatio *t)
 {
     if (num_trans >= cap_trans) {
-        cap_trans = cap_trans ? cap_trans * 2 : 256;
+        cap_trans     = cap_trans ? cap_trans * 2 : 256;
         translationes = redimensiona(translationes, (size_t)cap_trans * sizeof(Translatio));
     }
     translationes[num_trans++] = *t;
@@ -217,7 +226,7 @@ static char *extrahe_iter(const char *p)
 {
     /* Trunca ad tabulam (tempus in diff vulgari) */
     const char *tab = strchr(p, '\t');
-    size_t lon = tab ? (size_t)(tab - p) : strlen(p);
+    size_t lon      = tab ? (size_t)(tab - p) : strlen(p);
 
     /* /dev/null intactum servatur */
     if (lon == 9 && strncmp(p, "/dev/null", 9) == 0)
@@ -242,7 +251,7 @@ static char *extrahe_iter(const char *p)
 static void resolve_differentiam(FILE *fons)
 {
     /* I. Lege totum flumen in thesaurum */
-    size_t cap_th = 1 << 16, lon_th = 0;
+    size_t cap_th   = 1 << 16, lon_th = 0;
     char *thesaurus = para(cap_th);
     size_t lecta;
     while ((lecta = fread(thesaurus + lon_th, 1, cap_th - lon_th - 1, fons)) > 0) {
@@ -255,7 +264,7 @@ static void resolve_differentiam(FILE *fons)
     thesaurus[lon_th] = '\0';
 
     /* II. Divide in versus (mutando '\n' -> '\0' in loco) */
-    int cap_v = 16384, num_v = 0;
+    int cap_v     = 16384, num_v = 0;
     char **versus = para((size_t)cap_v * sizeof(char *));
     {
         char *p = thesaurus;
@@ -265,13 +274,17 @@ static void resolve_differentiam(FILE *fons)
                 versus = redimensiona(versus, (size_t)cap_v * sizeof(char *));
             }
             versus[num_v++] = p;
-            while (*p && *p != '\n') p++;
-            if (*p == '\n') { *p = '\0'; p++; }
+            while (*p && *p != '\n')
+                p++;
+            if (*p == '\n') {
+                *p = '\0';
+                p++;
+            }
         }
     }
 
     /* III. Resolve plicas, segmenta, versus sublatos et additos */
-    int idx = -1;                   /* index plicae praesentis */
+    int idx     = -1;                   /* index plicae praesentis */
     int num_vet = 0, num_nov = 0;   /* numeri versuum currentium  */
 
     for (int i = 0; i < num_v; i++) {
@@ -282,7 +295,8 @@ static void resolve_differentiam(FILE *fons)
             idx = adde_plicam();
             continue;
         }
-        if (idx < 0) continue;
+        if (idx < 0)
+            continue;
 
         Plica *f = &plicae[idx];
 
@@ -313,14 +327,22 @@ static void resolve_differentiam(FILE *fons)
         /* Caput segmenti: @@ -a,b +c,d @@ */
         if (lin[0] == '@' && lin[1] == '@' && lin[2] == ' ') {
             const char *q = lin + 3;
-            int s_vet = 0, n_vet = 1, s_nov = 0, n_nov = 1;
-            if (*q == '-') q++;
+            int s_vet     = 0, n_vet = 1, s_nov = 0, n_nov = 1;
+            if (*q == '-')
+                q++;
             s_vet = (int)strtol(q, (char **)&q, 10);
-            if (*q == ',') { q++; n_vet = (int)strtol(q, (char **)&q, 10); }
+            if (*q == ',') {
+                q++;
+                n_vet = (int)strtol(q, (char **)&q, 10);
+            }
             while (*q == ' ') q++;
-            if (*q == '+') q++;
+            if (*q == '+')
+                q++;
             s_nov = (int)strtol(q, (char **)&q, 10);
-            if (*q == ',') { q++; n_nov = (int)strtol(q, (char **)&q, 10); }
+            if (*q == ',') {
+                q++;
+                n_nov = (int)strtol(q, (char **)&q, 10);
+            }
             num_vet = s_vet;
             num_nov = s_nov;
             /* -0,0 = plica vetus vacuus → creatum
@@ -333,13 +355,15 @@ static void resolve_differentiam(FILE *fons)
         }
 
         /* Lineae quas ignoramus */
-        if (strncmp(lin, "index ",      6)  == 0 ||
+        if (
+            strncmp(lin, "index ",      6)  == 0 ||
             strncmp(lin, "similarity", 10)  == 0 ||
             strncmp(lin, "rename ",     7)  == 0 ||
             strncmp(lin, "old mode",    8)  == 0 ||
             strncmp(lin, "new mode",    8)  == 0 ||
             strncmp(lin, "Binary",      6)  == 0 ||
-            lin[0] == '\\')
+            lin[0] == '\\'
+        )
             continue;
 
         /* Versus contenti */
@@ -383,8 +407,10 @@ static void resolve_differentiam(FILE *fons)
 static int compara_paria(const void *a, const void *b)
 {
     const ParSigilli *pa = a, *pb = b;
-    if (pa->sigillum < pb->sigillum) return -1;
-    if (pa->sigillum > pb->sigillum) return  1;
+    if (pa->sigillum < pb->sigillum)
+        return -1;
+    if (pa->sigillum > pb->sigillum)
+        return  1;
     return 0;
 }
 
@@ -394,8 +420,10 @@ static int quaere_primum(const ParSigilli *idx, int lon, uint64_t sig)
     int s = 0, d = lon;
     while (s < d) {
         int m = s + (d - s) / 2;
-        if (idx[m].sigillum < sig) s = m + 1;
-        else d = m;
+        if (idx[m].sigillum < sig)
+            s = m + 1;
+        else
+            d = m;
     }
     return s;
 }
@@ -408,9 +436,10 @@ static void inveni_inter(int f_s, int f_d)
 {
     Plica *fons = &plicae[f_s];
     Plica *dest = &plicae[f_d];
-    int n = fons->sublata.longitudo;
-    int m = dest->addita.longitudo;
-    if (n == 0 || m == 0) return;
+    int n       = fons->sublata.longitudo;
+    int m       = dest->addita.longitudo;
+    if (n == 0 || m == 0)
+        return;
 
     /* I. Aedifica indicem ordinatum additorum secundum sigillum */
     ParSigilli *indicium = para((size_t)m * sizeof(ParSigilli));
@@ -421,13 +450,13 @@ static void inveni_inter(int f_s, int f_d)
     qsort(indicium, (size_t)m, sizeof(ParSigilli), compara_paria);
 
     /* II. Aedifica histogramma distantiarum (series plana) */
-    int d_min = -(n - 1);
+    int d_min     = -(n - 1);
     int amplitudo = (m - 1) - d_min + 1;   /* = n + m - 1 */
-    int *hist = para_pura((size_t)amplitudo, sizeof(int));
+    int *hist     = para_pura((size_t)amplitudo, sizeof(int));
 
     for (int i = 0; i < n; i++) {
         uint64_t sig = fons->sublata.res[i].sigillum;
-        int p = quaere_primum(indicium, m, sig);
+        int p        = quaere_primum(indicium, m, sig);
 
         /* Numera concordantias in indice */
         int nconc = 0;
@@ -445,25 +474,30 @@ static void inveni_inter(int f_s, int f_d)
 
     /* III. Pro quaque distantia significanti, extrahe truncos continuos */
     for (int di = 0; di < amplitudo; di++) {
-        if (hist[di] < LIMEN_TRUNCI) continue;
+        if (hist[di] < LIMEN_TRUNCI)
+            continue;
         int dist = di + d_min;
 
         /* Limites validi indicis k in sublata:
          *   k >= 0,  k < n,  k+dist >= 0,  k+dist < m  */
         int k_min = 0;
-        if (-dist > k_min) k_min = -dist;
+        if (-dist > k_min)
+            k_min = -dist;
         int k_max = n;
-        if (m - dist < k_max) k_max = m - dist;
-        if (k_max <= k_min) continue;
+        if (m - dist < k_max)
+            k_max = m - dist;
+        if (k_max <= k_min)
+            continue;
 
         /* Collige positiones concordantes */
         int cap_conc = 256, num_conc = 0;
-        int *conc = para((size_t)cap_conc * sizeof(int));
+        int *conc    = para((size_t)cap_conc * sizeof(int));
 
         for (int k = k_min; k < k_max; k++) {
-            if (fons->sublata.res[k].sigillum ==
-                dest->addita.res[k + dist].sigillum)
-            {
+            if (
+                fons->sublata.res[k].sigillum ==
+                dest->addita.res[k + dist].sigillum
+            ) {
                 if (num_conc >= cap_conc) {
                     cap_conc *= 2;
                     conc = redimensiona(conc, (size_t)cap_conc * sizeof(int));
@@ -477,23 +511,30 @@ static void inveni_inter(int f_s, int f_d)
         while (cursor < num_conc) {
             int initium_c = cursor;
             cursor++;
-            while (cursor < num_conc &&
-                   conc[cursor] - conc[cursor - 1] - 1 <= LIMEN_LACUNAE)
+            while (
+                cursor < num_conc &&
+                conc[cursor] - conc[cursor - 1] - 1 <= LIMEN_LACUNAE
+            )
                 cursor++;
 
             /* Reseca concordantias solitarias ab extremitatibus:
              * si ultima concordantia lacuna separata est ab antecedentibus,
              * eam removimus ne truncus ultra finem naturalem extendatur.
              * Similiter pro initio. */
-            while (cursor > initium_c + 1 &&
-                   conc[cursor - 1] - conc[cursor - 2] - 1 > 0)
+            while (
+                cursor > initium_c + 1 &&
+                conc[cursor - 1] - conc[cursor - 2] - 1 > 0
+            )
                 cursor--;
-            while (initium_c + 1 < cursor &&
-                   conc[initium_c + 1] - conc[initium_c] - 1 > 0)
+            while (
+                initium_c + 1 < cursor &&
+                conc[initium_c + 1] - conc[initium_c] - 1 > 0
+            )
                 initium_c++;
 
             int num_in_trunco = cursor - initium_c;
-            if (num_in_trunco < LIMEN_TRUNCI) continue;
+            if (num_in_trunco < LIMEN_TRUNCI)
+                continue;
 
             int k_init = conc[initium_c];
             int k_fin  = conc[cursor - 1];
@@ -529,7 +570,8 @@ static int compara_magnitudine(const void *a, const void *b)
     const Translatio *ta = a, *tb = b;
     int sa = 2 * ta->concordantes - ta->magnitudo;
     int sb = 2 * tb->concordantes - tb->magnitudo;
-    if (sa != sb) return sb - sa;
+    if (sa != sb)
+        return sb - sa;
     return tb->concordantes - ta->concordantes;
 }
 
@@ -543,9 +585,9 @@ static void elige_translationes(void)
     qsort(candidati, (size_t)num_cand, sizeof(Translatio), compara_magnitudine);
 
     for (int i = 0; i < num_cand; i++) {
-        Translatio *c  = &candidati[i];
-        Plica *fs = &plicae[c->index_fontis];
-        Plica *fd = &plicae[c->index_destinationis];
+        Translatio *c = &candidati[i];
+        Plica *fs     = &plicae[c->index_fontis];
+        Plica *fd     = &plicae[c->index_destinationis];
 
         /* Inveni partes liberas (non possessas) intra candidatum */
         int initium_partis = -1;
@@ -555,7 +597,8 @@ static void elige_translationes(void)
                 fd->addita.res[c->initium_dest   + k].translatum;
 
             if (!occupatum) {
-                if (initium_partis < 0) initium_partis = k;
+                if (initium_partis < 0)
+                    initium_partis = k;
             } else if (initium_partis >= 0) {
                 int lon_partis = k - initium_partis;
                 if (lon_partis >= LIMEN_TRUNCI) {
@@ -570,8 +613,10 @@ static void elige_translationes(void)
                         fd->addita.res[pars.initium_dest].numerus;
                     pars.concordantes = 0;
                     for (int j = 0; j < lon_partis; j++)
-                        if (fs->sublata.res[pars.initium_fontis + j].sigillum ==
-                            fd->addita.res[pars.initium_dest   + j].sigillum)
+                        if (
+                            fs->sublata.res[pars.initium_fontis + j].sigillum ==
+                            fd->addita.res[pars.initium_dest   + j].sigillum
+                        )
                             pars.concordantes++;
 
                     /* Posside versus */
@@ -614,8 +659,10 @@ static const char *iter_plicae(const Plica *f)
 /* Littera generis */
 static char littera_generis(int genus)
 {
-    if (genus == DELETUM) return 'D';
-    if (genus == CREATUM) return 'C';
+    if (genus == DELETUM)
+        return 'D';
+    if (genus == CREATUM)
+        return 'C';
     return 'M';
 }
 
@@ -636,8 +683,10 @@ static void scribe_ddiff(void)
     /* ---- PLICAE ---- */
     printf("PLICAE\n");
     for (int i = 0; i < num_plic; i++)
-        printf("%c %s\n", littera_generis(plicae[i].genus),
-               iter_plicae(&plicae[i]));
+        printf(
+            "%c %s\n", littera_generis(plicae[i].genus),
+            iter_plicae(&plicae[i])
+        );
     printf("\n");
 
     /* ---- TRANSLATIONES ---- */
@@ -645,50 +694,61 @@ static void scribe_ddiff(void)
     printf("TRANSLATIONES %d\n", num_trans);
 
     for (int i = 0; i < num_trans; i++) {
-        Translatio *t  = &translationes[i];
-        Plica *fs = &plicae[t->index_fontis];
-        Plica *fd = &plicae[t->index_destinationis];
+        Translatio *t    = &translationes[i];
+        Plica *fs        = &plicae[t->index_fontis];
+        Plica *fd        = &plicae[t->index_destinationis];
         const char *it_f = fs->iter_vetus;
         const char *it_d = fd->iter_novus;
-        int dissim = t->magnitudo - t->concordantes;
+        int dissim       = t->magnitudo - t->concordantes;
         int finis_fontis =
             fs->sublata.res[t->initium_fontis + t->magnitudo - 1].numerus;
         int finis_dest =
             fd->addita.res[t->initium_dest + t->magnitudo - 1].numerus;
 
-        printf("T %s:[%d,%d] >> %s:[%d,%d] %dv %dd\n",
-               it_f,
-               t->numerus_fontis, finis_fontis,
-               it_d,
-               t->numerus_dest, finis_dest,
-               t->magnitudo,
-               dissim);
+        printf(
+            "T %s:[%d,%d] >> %s:[%d,%d] %dv %dd\n",
+            it_f,
+            t->numerus_fontis, finis_fontis,
+            it_d,
+            t->numerus_dest, finis_dest,
+            t->magnitudo,
+            dissim
+        );
 
         /* Scribe delta dissimilium versuum */
         if (dissim > 0) {
             int k = 0;
             while (k < t->magnitudo) {
                 /* Salta versus concordantes */
-                while (k < t->magnitudo &&
-                       fs->sublata.res[t->initium_fontis + k].sigillum ==
-                       fd->addita.res[t->initium_dest   + k].sigillum)
+                while (
+                    k < t->magnitudo &&
+                    fs->sublata.res[t->initium_fontis + k].sigillum ==
+                    fd->addita.res[t->initium_dest   + k].sigillum
+                )
                     k++;
-                if (k >= t->magnitudo) break;
+                if (k >= t->magnitudo)
+                    break;
 
                 /* Collige dissimilia continua */
                 int g_init = k;
-                while (k < t->magnitudo &&
-                       fs->sublata.res[t->initium_fontis + k].sigillum !=
-                       fd->addita.res[t->initium_dest   + k].sigillum)
+                while (
+                    k < t->magnitudo &&
+                    fs->sublata.res[t->initium_fontis + k].sigillum !=
+                    fd->addita.res[t->initium_dest   + k].sigillum
+                )
                     k++;
 
                 printf("  @%d\n", g_init);
                 for (int g = g_init; g < k; g++)
-                    printf("  -%s\n",
-                           fs->sublata.res[t->initium_fontis + g].argumentum);
+                    printf(
+                        "  -%s\n",
+                        fs->sublata.res[t->initium_fontis + g].argumentum
+                    );
                 for (int g = g_init; g < k; g++)
-                    printf("  +%s\n",
-                           fd->addita.res[t->initium_dest + g].argumentum);
+                    printf(
+                        "  +%s\n",
+                        fd->addita.res[t->initium_dest + g].argumentum
+                    );
             }
         }
         printf(".\n");
@@ -698,32 +758,41 @@ static void scribe_ddiff(void)
     /* ---- MUTATIONES ---- */
     printf("MUTATIONES\n");
     for (int i = 0; i < num_plic; i++) {
-        Plica *f = &plicae[i];
+        Plica *f  = &plicae[i];
         int habet = 0;
 
         for (int j = 0; j < f->sublata.longitudo; j++) {
             if (!f->sublata.res[j].translatum) {
                 if (!habet) {
-                    printf("%c %s\n", littera_generis(f->genus),
-                           iter_plicae(f));
+                    printf(
+                        "%c %s\n", littera_generis(f->genus),
+                        iter_plicae(f)
+                    );
                     habet = 1;
                 }
-                printf("  -%d %s\n", f->sublata.res[j].numerus,
-                       f->sublata.res[j].argumentum);
+                printf(
+                    "  -%d %s\n", f->sublata.res[j].numerus,
+                    f->sublata.res[j].argumentum
+                );
             }
         }
         for (int j = 0; j < f->addita.longitudo; j++) {
             if (!f->addita.res[j].translatum) {
                 if (!habet) {
-                    printf("%c %s\n", littera_generis(f->genus),
-                           iter_plicae(f));
+                    printf(
+                        "%c %s\n", littera_generis(f->genus),
+                        iter_plicae(f)
+                    );
                     habet = 1;
                 }
-                printf("  +%d %s\n", f->addita.res[j].numerus,
-                       f->addita.res[j].argumentum);
+                printf(
+                    "  +%d %s\n", f->addita.res[j].numerus,
+                    f->addita.res[j].argumentum
+                );
             }
         }
-        if (habet) printf(".\n");
+        if (habet)
+            printf(".\n");
     }
 
     /* ---- SUMMARIUM (ad stderr) ---- */
@@ -736,15 +805,21 @@ static void scribe_ddiff(void)
     for (int i = 0; i < num_plic; i++) {
         Plica *f = &plicae[i];
         for (int j = 0; j < f->sublata.longitudo; j++)
-            if (!f->sublata.res[j].translatum) rel_sub++;
+            if (!f->sublata.res[j].translatum)
+                rel_sub++;
         for (int j = 0; j < f->addita.longitudo; j++)
-            if (!f->addita.res[j].translatum) rel_add++;
+            if (!f->addita.res[j].translatum)
+                rel_add++;
     }
-    fprintf(stderr,
-            "SUMMARIUM: %d plicae, %d translationes (%d versus, %d dissimilia)\n",
-            num_plic, num_trans, tot_trans, tot_dissim);
-    fprintf(stderr,
-            "           reliqua: -%d +%d versus\n", rel_sub, rel_add);
+    fprintf(
+        stderr,
+        "SUMMARIUM: %d plicae, %d translationes (%d versus, %d dissimilia)\n",
+        num_plic, num_trans, tot_trans, tot_dissim
+    );
+    fprintf(
+        stderr,
+        "           reliqua: -%d +%d versus\n", rel_sub, rel_add
+    );
 }
 
 /* =========================================================================
@@ -765,16 +840,22 @@ static void auxilium_ddiff(void)
 
 int main(int argc, char **argv)
 {
-    if (argc == 2 && (strcmp(argv[1], "-h") == 0 ||
-                      strcmp(argv[1], "--help") == 0)) {
+    if (
+        argc == 2 && (
+            strcmp(argv[1], "-h") == 0 ||
+            strcmp(argv[1], "--help") == 0
+        )
+    ) {
         auxilium_ddiff();
         return 0;
     }
 
     if (argc == 4 && strcmp(argv[1], "-r") == 0) {
         char mandatum[4096];
-        snprintf(mandatum, sizeof(mandatum),
-                 "diff -ruN %s %s", argv[2], argv[3]);
+        snprintf(
+            mandatum, sizeof(mandatum),
+            "diff -ruN %s %s", argv[2], argv[3]
+        );
         FILE *fons = popen(mandatum, "r");
         if (!fons) {
             fprintf(stderr, "ERROR: 'diff' excitari non potest\n");

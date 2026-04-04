@@ -26,4 +26,7 @@ proba: $(OMNIA)
 purga:
 	rm -f $(OMNIA)
 
-.PHONY: omnia purga proba
+linte:
+	insinulint -c ddiff.c dpatch.c
+
+.PHONY: omnia purga proba linte
