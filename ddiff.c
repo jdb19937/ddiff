@@ -284,8 +284,9 @@ static void resolve_differentiam(FILE *fons)
     }
 
     /* III. Resolve plicas, segmenta, versus sublatos et additos */
-    int idx     = -1;                   /* index plicae praesentis */
-    int num_vet = 0, num_nov = 0;   /* numeri versuum currentium  */
+    int idx     = -1;   /* index plicae praesentis */
+    int num_vet = 0;
+    int num_nov = 0;
 
     for (int i = 0; i < num_v; i++) {
         const char *lin = versus[i];
@@ -603,7 +604,7 @@ static void elige_translationes(void)
                 int lon_partis = k - initium_partis;
                 if (lon_partis >= LIMEN_TRUNCI) {
                     /* Aedifica translationem ex parte libera */
-                    Translatio pars = *c;
+                    Translatio pars      = *c;
                     pars.initium_fontis += initium_partis;
                     pars.initium_dest   += initium_partis;
                     pars.magnitudo       = lon_partis;
@@ -615,14 +616,14 @@ static void elige_translationes(void)
                     for (int j = 0; j < lon_partis; j++)
                         if (
                             fs->sublata.res[pars.initium_fontis + j].sigillum ==
-                            fd->addita.res[pars.initium_dest   + j].sigillum
+                            fd->addita .res[pars.initium_dest   + j].sigillum
                         )
                             pars.concordantes++;
 
                     /* Posside versus */
                     for (int j = 0; j < lon_partis; j++) {
                         fs->sublata.res[pars.initium_fontis + j].translatum = 1;
-                        fd->addita.res[pars.initium_dest   + j].translatum  = 1;
+                        fd->addita .res[pars.initium_dest   + j].translatum = 1;
                     }
                     adde_translationem(&pars);
                 }
@@ -723,7 +724,7 @@ static void scribe_ddiff(void)
                 while (
                     k < t->magnitudo &&
                     fs->sublata.res[t->initium_fontis + k].sigillum ==
-                    fd->addita.res[t->initium_dest   + k].sigillum
+                    fd->addita .res[t->initium_dest   + k].sigillum
                 )
                     k++;
                 if (k >= t->magnitudo)
@@ -734,7 +735,7 @@ static void scribe_ddiff(void)
                 while (
                     k < t->magnitudo &&
                     fs->sublata.res[t->initium_fontis + k].sigillum !=
-                    fd->addita.res[t->initium_dest   + k].sigillum
+                    fd->addita .res[t->initium_dest   + k].sigillum
                 )
                     k++;
 
