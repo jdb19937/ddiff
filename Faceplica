@@ -23,10 +23,16 @@ proba: $(OMNIA)
 		|| (echo "PROBATIO FALLIT"; diff -r probata/novum probata/applicatio; exit 1)
 	@rm -rf probata/applicatio
 
+PREFIX = /opt/apotheca
+
+colloca: omnia
+	install -d $(PREFIX)/bin
+	install -m 755 ddiff dpatch $(PREFIX)/bin/
+
 purga:
 	rm -f $(OMNIA)
 
 linte:
 	insinulint -c ddiff.c dpatch.c
 
-.PHONY: omnia purga proba linte
+.PHONY: omnia colloca purga proba linte
