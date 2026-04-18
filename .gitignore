@@ -1,3 +1,5 @@
 ddiff
 dpatch
+ddiff.o
+dpatch.o
 cancer/target

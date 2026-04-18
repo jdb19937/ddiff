@@ -1,36 +1,27 @@
 # Compilatio instrumentorum ddiff et dpatch
 
-CC      ?= cc
-CFLAGS  ?= -Wall -Wextra -pedantic -std=c99 -O2
-OMNIA   = ddiff dpatch
-
-omnia: $(OMNIA)
-
-ddiff: ddiff.c
-	$(CC) $(CFLAGS) -o $@ $<
-
-dpatch: dpatch.c
-	$(CC) $(CFLAGS) -o $@ $<
-
-proba: $(OMNIA)
-	@rm -rf probata/applicatio
-	@mkdir probata/applicatio
-	@cp probata/veterum/* probata/applicatio/
-	(cd probata && diff -ruN veterum novum) | ./ddiff 2>/dev/null | \
-		(cd probata/applicatio && ../../dpatch) 2>/dev/null
-	@diff -r probata/novum probata/applicatio > /dev/null \
-		&& echo "PROBATIO SVCCESSIT" \
-		|| (echo "PROBATIO FALLIT"; diff -r probata/novum probata/applicatio; exit 1)
-	@rm -rf probata/applicatio
-
 PREFIX = /opt/apotheca
+
+omnia: ddiff dpatch
+
+ddiff: ddiff.o
+	ldi $^
+
+dpatch: dpatch.o
+	ldi $^
+
+%.o: %.c
+	ccc $<
+
+proba: omnia
+	./proba_prima.py
 
 colloca: omnia
 	install -d $(PREFIX)/bin
 	install -m 755 ddiff dpatch $(PREFIX)/bin/
 
 purga:
-	rm -f $(OMNIA)
+	rm -f ddiff dpatch ddiff.o dpatch.o
 
 linte:
 	insinulint -c ddiff.c dpatch.c
